@@ -1,0 +1,398 @@
+[
+{
+	"name": "Nathan Horton",
+	"age": 31,
+	"pos": "RW",
+	"shoots": "R",
+	"cap-hit"	: 5300000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "NMC",
+			"nhl-salary" : 6000000,
+			"ahl-salary" : 6000000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 6000000,
+			"ahl-salary" : 6000000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2018-2019" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 4500000,
+			"ahl-salary" : 4500000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2019-2020" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 3600000,
+			"ahl-salary" : 3600000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Joffery Lupul",
+	"age": 33,
+	"pos": "RW",
+	"shoots": "R",
+	"cap-hit"	: 5250000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 5250000,
+			"ahl-salary" : 5250000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 3750000,
+			"ahl-salary" : 3750000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Nazem Kadri",
+	"age": 26,
+	"pos": "C",
+	"shoots": "L",
+	"cap-hit"	: 4500000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 5000000,
+			"ahl-salary" : 5000000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 5000000,
+			"ahl-salary" : 5000000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		},
+		"2018-2019" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 4500000,
+			"ahl-salary" : 4500000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		},
+		"2019-2020" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 4500000,
+			"ahl-salary" : 4500000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "James van Riemsdyk",
+	"age": 27,
+	"pos": "LW",
+	"shoots": "L",
+	"cap-hit"	: 4250000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 5000000,
+			"ahl-salary" : 5000000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 5000000,
+			"ahl-salary" : 5000000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Tyler Bozak",
+	"age": 30,
+	"pos": "C",
+	"shoots": "R",
+	"cap-hit"	: 4200000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 4500000,
+			"ahl-salary" : 4500000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 4000000,
+			"ahl-salary" : 4000000,
+			"signing-bonus" : 2000000,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Milan Michalek",
+	"age": 31,
+	"pos": "LW",
+	"shoots": "L",
+	"cap-hit"	: 4000000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "Modified NTC",
+			"nhl-salary" : 4000000,
+			"ahl-salary" : 4000000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Leo Komorov",
+	"age": 29,
+	"pos": "LW",
+	"shoots": "L",
+	"cap-hit"	: 2950000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 2950000,
+			"ahl-salary" : 2950000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 2950000,
+			"ahl-salary" : 2950000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Matt Martin",
+	"age": 27,
+	"pos": "RW",
+	"shoots": "L",
+	"cap-hit"	: 2500000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 3500000,
+			"ahl-salary" : 3500000,
+			"signing-bonus" : 2500000,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 2500000,
+			"ahl-salary" : 2500000,
+			"signing-bonus" : 1500000,
+			"player-bonus" : 0
+		},
+		"2018-2019" : {
+			"clause"	: "",
+			"nhl-salary" : 2250000,
+			"ahl-salary" : 2250000,
+			"signing-bonus" : 1500000,
+			"player-bonus" : 0
+		},
+		"2019-2020" : {
+			"clause"	: "",
+			"nhl-salary" : 1750000,
+			"ahl-salary" : 1750000,
+			"signing-bonus" : 1000000,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Peter Holland",
+	"age": 25,
+	"pos": "C",
+	"shoots": "L",
+	"cap-hit"	: 1300000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 1300000,
+			"ahl-salary" : 1300000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Auston Matthews",
+	"age": 19,
+	"pos": "RW",
+	"shoots": "L",
+	"cap-hit"	: 925000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 2850000
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 2850000
+		},
+		"2018-2019" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 2850000
+		}
+	}
+},
+{
+	"name": "Zack Hyman",
+	"age": 24,
+	"pos": "C",
+	"shoots": "R",
+	"cap-hit"	: 900000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 900000,
+			"ahl-salary" : 67500,
+			"signing-bonus" : 90000,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 900000,
+			"ahl-salary" : 67500,
+			"signing-bonus" : 90000,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "William Nylander",
+	"age": 20,
+	"pos": "RW",
+	"shoots": "R",
+	"cap-hit"	: 894167,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 850000
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 0,
+			"player-bonus" : 850000
+		}
+	}
+},
+{
+	"name": "Mitch Marner",
+	"age": 19,
+	"pos": "RW",
+	"shoots": "R",
+	"cap-hit"	: 894167,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 850000
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 925000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 92500,
+			"player-bonus" : 850000
+		},
+		"2018-2019" : {
+			"clause"	: "",
+			"nhl-salary" : 832500,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 0,
+			"player-bonus" : 850000
+		}
+	}
+},
+{
+	"name": "Connor Brown",
+	"age": 22,
+	"pos": "RW",
+	"shoots": "R",
+	"cap-hit"	: 686667,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 650000,
+			"ahl-salary" : 70000,
+			"signing-bonus" : 0,
+			"player-bonus" : 182500
+		}
+	}
+},
+{
+	"name": "Seth Griffith",
+	"age": 23,
+	"pos": "C",
+	"shoots": "R",
+	"cap-hit"	: 625000,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 625000,
+			"ahl-salary" : 150000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+},
+{
+	"name": "Josh Leivo",
+	"age": 23,
+	"pos": "LW",
+	"shoots": "R",
+	"cap-hit"	: 612500,
+	"contract": {
+		"2016-2017" : {
+			"clause"	: "",
+			"nhl-salary" : 575000,
+			"ahl-salary" : 575000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		},
+		"2017-2018" : {
+			"clause"	: "",
+			"nhl-salary" : 650000,
+			"ahl-salary" : 650000,
+			"signing-bonus" : 0,
+			"player-bonus" : 0
+		}
+	}
+}
+]
