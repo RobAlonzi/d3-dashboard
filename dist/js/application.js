@@ -1,62 +1,243 @@
-"use strict";
+'use strict';
 
-console.log('the start of something beautiful');
+var salaryCap = 74000000,
+    yearSelected = '2016-2017',
+    freshData = void 0;
 
-//Width and height
-var w = 700;
-var h = 500;
-var padding = 30;
+//getting team data JSON
+var data = new Promise(function (resolve, reject) {
 
-//Dynamic, random dataset
-var dataset = [];
-var numDataPoints = 50;
-var xRange = Math.random() * 1000;
-var yRange = Math.random() * 1000;
-for (var i = 0; i < numDataPoints; i++) {
-                var newNumber1 = Math.floor(Math.random() * xRange);
-                var newNumber2 = Math.floor(Math.random() * yRange);
-                dataset.push([newNumber1, newNumber2]);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/js/data.json?t=' + Math.random());
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    xhr.onload = function () {
+        if (this.status >= 200 && this.status < 300) {
+            resolve(JSON.parse(xhr.response) || xhr.responseText);
+        } else {
+            reject({
+                status: this.status,
+                statusText: xhr.statusText
+            });
+        }
+    };
+
+    xhr.onerror = function () {
+        reject({
+            status: this.status,
+            statusText: xhr.statusText
+        });
+    };
+    xhr.send();
+});
+
+//after we have JSON..do stuff.
+data.then(function (v) {
+    //save copy of data in case we need to start fresh
+    freshData = JSON.parse(JSON.stringify(v));
+
+    //list all players on team breakdown section
+    populateTeamBreakdown(v);
+    //run some math on all players
+    populateTeamOverviews(v);
+});
+
+var createPoints = function createPoints() {
+    //creating 'fake' team pts data
+    var ptsBreakdown = [];
+    var outcomes = [0, 1, 2];
+    var totalPoints = 0;
+    for (var i = 1; i < 83; i++) {
+        var ptsGained = outcomes[Math.floor(Math.random() * outcomes.length)];
+        totalPoints += ptsGained;
+        ptsBreakdown.push({ 'name': 'team', 'game': i, 'pts': totalPoints });
+    }
+
+    //creating avg team pts data
+    var totalPointsAvg = 0;
+    for (var _i = 1; _i < 83; _i++) {
+        totalPointsAvg += 1.11;
+        ptsBreakdown.push({ 'name': 'avg', 'game': _i, 'pts': totalPointsAvg });
+    }
+
+    //creating playoff pace team pts data
+    var totalPointsPlf = 0;
+    for (var _i2 = 1; _i2 < 83; _i2++) {
+        totalPointsPlf += 1.134;
+        ptsBreakdown.push({ 'name': 'plf', 'game': _i2, 'pts': totalPointsPlf });
+    }
+
+    //let d3 nest them into proper groupings
+    var ptsByName = d3.nest().key(function (d) {
+        return d.name;
+    }).entries(ptsBreakdown);
+
+    //Setting up svg.
+    var svg = d3.select("#salary-pie-chart svg"),
+        margin = { top: 30, right: 30, bottom: 30, left: 30 },
+        width = svg.attr("width") - margin.left - margin.right,
+        height = svg.attr("height") - margin.top - margin.bottom,
+        g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    var x = d3.scaleLinear().range([0, width]),
+        y = d3.scaleLinear().range([height, 0]),
+        z = d3.scaleOrdinal(d3.schemeCategory10);
+
+    var line = d3.line().x(function (d) {
+        return x(d.game);
+    }).y(function (d) {
+        return y(d.pts);
+    });
+
+    x.domain(ptsByName, function (d) {
+        return d.game;
+    });
+
+    y.domain([d3.min(ptsByName, function (c) {
+        return d3.min(c.values, function (d) {
+            return d.pts;
+        });
+    }), d3.max(ptsByName, function (c) {
+        return d3.max(c.values, function (d) {
+            return d.pts;
+        });
+    })]);
+
+    z.domain(ptsByName, function (c) {
+        return c.game;
+    });
+
+    g.append("g").attr("class", "axis axis--x").attr("transform", "translate(0," + height + ")").call(d3.axisBottom(x));
+
+    g.append("g").attr("class", "axis axis--y").call(d3.axisLeft(y)).append("text").attr("transform", "rotate(-90)").attr("y", 6).attr("dy", "0.71em").attr("fill", "#000").text("Points");
+
+    var city = g.selectAll(".city").data(ptsByName).enter().append("g").attr("class", "city");
+
+    city.append("path").attr("class", "line").attr("d", function (d) {
+        return line(d.values);
+    }).style("stroke", "black");
+
+    city.append("text").datum(function (d) {
+        return { key: d.key, value: d.values[d.values.length - 1] };
+    }).attr("transform", function (d) {
+        return "translate(" + 10 + "," + 10 + ")";
+    }).attr("x", 3).attr("dy", "0.35em").style("font", "10px sans-serif").text(function (d) {
+        return 'hi';
+    });
+};
+
+createPoints();
+
+function populateTeamBreakdown(team) {
+    for (var playerKey in team) {
+        var player = team[playerKey],
+            pos = player.pos;
+
+        if (!player.contract[yearSelected]) continue;
+
+        var a = document.createElement('a');
+        a.className = 'list-group-item';
+        a.href = "javascript:;";
+        a.setAttribute("player-key", playerKey);
+        a.innerHTML = player.name + '<span class="pull-right text-muted small">$' + player.contract["2016-2017"]["nhl-salary"].toLocaleString() + '</span>';
+
+        switch (pos) {
+            case 'F':
+                document.getElementById('team-breakdown-forwards').appendChild(a);
+                break;
+            case 'D':
+                document.getElementById('team-breakdown-defense').appendChild(a);
+                break;
+            case 'G':
+                document.getElementById('team-breakdown-goalies').appendChild(a);
+                break;
+            default:
+                break;
+        }
+
+        document.getElementById('team-breakdown').onclick = function (evt) {
+            var event = evt || window.event,
+                target = event.target || event.srcElement,
+                playerKey = target.getAttribute('player-key');
+
+            if (playerKey) {
+                switchPlayerCharts(team, playerKey);
+            }
+        };
+    }
 }
 
-//Create scale functions
-var xScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
-                return d[0];
-})]).range([padding, w - padding * 2]);
+function switchPlayerCharts(team, playerKey) {
+    var player = team[playerKey];
+    console.log(player);
+}
 
-var yScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
-                return d[1];
-})]).range([h - padding, padding]);
+function populateTeamOverviews(team) {
 
-var rScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
-                return d[1];
-})]).range([2, 5]);
+    var teamOverview = {
+        total: 0,
+        salary: 0,
 
-//var formatAsPercentage = d3.format(".1%");
+        forwards: {
+            total: 0,
+            salary: 0,
+            players: {}
+        },
+        defensemen: {
+            total: 0,
+            salary: 0,
+            players: {}
+        },
+        goalies: {
+            total: 0,
+            salary: 0,
+            players: {}
+        }
+    };
 
-//new V4 way
-//var xAxis = d3.axisBottom(xScale).ticks(5).tickFormat(formatAsPercentage);
-var xAxis = d3.axisBottom(xScale).ticks(5);
-var yAxis = d3.axisLeft(yScale).ticks(5);
+    for (var playerKey in team) {
+        var player = team[playerKey],
+            pos = player.pos;
 
-//Create SVG element
-var svg = d3.select("#salary-pie-chart").append("svg").attr("width", w).attr("height", h);
+        if (!player.contract[yearSelected]) continue;
 
-//Create Clip Path
-svg.append("clipPath") //Make a new clipPath
-.attr("id", "chart-area") //Assign an ID
-.append("rect") //Within the clipPath, create a new rect
-.attr("x", padding) //Set rect's position and size…
-.attr("y", padding).attr("width", w - padding * 3).attr("height", h - padding * 2);
+        switch (pos) {
+            case 'F':
+                teamOverview.forwards.total++;
+                teamOverview.forwards.salary += player.contract[yearSelected]["cap-hit"];
+                teamOverview.forwards.players[playerKey] = player;
+                break;
+            case 'D':
+                teamOverview.defensemen.total++;
+                teamOverview.defensemen.salary += player.contract[yearSelected]["cap-hit"];
+                teamOverview.defensemen.players[playerKey] = player;
+                break;
+            case 'G':
+                teamOverview.goalies.total++;
+                teamOverview.goalies.salary += player.contract[yearSelected]["cap-hit"];
+                teamOverview.goalies.players[playerKey] = player;
+                break;
+            default:
+                break;
+        }
 
-//Create circles
-svg.append("g").attr("id", "circles").attr("clip-path", "url(#chart-area)").selectAll("circle").data(dataset).enter().append("circle").attr("cx", function (d) {
-                return xScale(d[0]);
-}).attr("cy", function (d) {
-                return yScale(d[1]);
-}).attr("r", 5);
+        teamOverview.total++;
+        teamOverview.salary += player.contract[yearSelected]["cap-hit"];
+    }
 
-//Create X axis
-svg.append("g").attr("class", "x axis").attr("transform", "translate(0," + (h - padding) + ")").call(xAxis);
+    var totalPlayers = document.getElementById('overview-total-players');
+    totalPlayers.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.total + ' Total Players';
+    totalPlayers.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.salary.toLocaleString() + ' (' + Math.round(teamOverview.salary / salaryCap * 100) + '% of cap)';
 
-//Create Y axis
-svg.append("g").attr("class", "y axis").attr("transform", "translate(" + padding + ",0)").call(yAxis);
+    var totalForwards = document.getElementById('overview-total-forwards');
+    totalForwards.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.forwards.total + ' Total Forwards';
+    totalForwards.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.forwards.salary.toLocaleString() + ' (' + Math.round(teamOverview.forwards.salary / salaryCap * 100) + '% of cap)';
+
+    var totalDefense = document.getElementById('overview-total-defensemen');
+    totalDefense.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.defensemen.total + ' Total Defensemen';
+    totalDefense.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.defensemen.salary.toLocaleString() + ' (' + Math.round(teamOverview.defensemen.salary / salaryCap * 100) + '% of cap)';
+
+    var totalGoalies = document.getElementById('overview-total-goaltenders');
+    totalGoalies.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.goalies.total + ' Total Goaltenders';
+    totalGoalies.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.goalies.salary.toLocaleString() + ' (' + Math.round(teamOverview.goalies.salary / salaryCap * 100) + '% of cap)';
+}

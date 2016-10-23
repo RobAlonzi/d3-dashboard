@@ -12,7 +12,7 @@ const config = {
 
     scripts: {
         src : './js/application.js',
-        watchSrc: './js/*.js',
+        watchSrc: './js/*.{js,json}',
         dest: "./dist/js"
     }
 }   
@@ -66,6 +66,10 @@ function prodStyles(){
 
 
 function devScripts() {
+
+gulp.src('./js/data.json')
+    .pipe(gulp.dest(config.scripts.dest));
+
  return gulp
         .src(config.scripts.src)
         .pipe($.babel({
@@ -77,6 +81,10 @@ function devScripts() {
 
 
 function prodScripts() {
+
+gulp.src('./js/data.json')
+    .pipe(gulp.dest(config.scripts.dest));
+
  return gulp
         .src(config.scripts.src)
         .pipe($.babel({
