@@ -406,4 +406,9 @@ table.dataTable thead .sorting:after {
     border-right-width: 14px;
     border-left-width: 0; } }
 
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 1.5px; }
+
 /*# sourceMappingURL=application.css.map */

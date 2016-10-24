@@ -75,69 +75,69 @@ let createPoints = () =>  {
 
 
 //Setting up svg.
-let svg = d3.select("#salary-pie-chart svg"),
-    margin = {top: 30, right: 30, bottom: 30, left: 30},
-    width = svg.attr("width") - margin.left - margin.right,
-    height = svg.attr("height") - margin.top - margin.bottom,
-    g = svg.append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
-
-let x = d3.scaleLinear().range([0, width]),
-    y = d3.scaleLinear().range([height, 0]),
-    z = d3.scaleOrdinal(d3.schemeCategory10);
-
-let line = d3.line()
-    .x(function(d) {return x(d.game); })
-    .y(function(d) {return y(d.pts); });    
+// set the dimensions and margins of the graph
+var margin = {top: 20, right: 20, bottom: 30, left: 50},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
 
 
-x.domain(ptsByName, function(d) { return d.game; });
+// set the ranges
+var x = d3.scaleLinear().range([0, width]);
+var y = d3.scaleLinear().range([height, 0]);
 
-y.domain([
-    d3.min(ptsByName, function(c) { return d3.min(c.values, function(d) { return d.pts; }); }),
-    d3.max(ptsByName, function(c) { return d3.max(c.values, function(d) { return d.pts; }); })
-  ]);
+// define the 1st line
+var valueline = d3.line()
+    .x(function(d) { console.log(d); return x(d.game); })
+    .y(function(d) { return y(d.pts); });
 
-z.domain(ptsByName, function(c) { return c.game; });
+// define the 2nd line
+var valueline2 = d3.line()
+    .x(function(d) { return x(d.game); })
+    .y(function(d) { return y(d.pts); });
 
+// append the svg obgect to the body of the page
+// appends a 'group' element to 'svg'
+// moves the 'group' element to the top left margin
+var svg = d3.select("body").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
 
-g.append("g")
-      .attr("class", "axis axis--x")
+  // Scale the range of the data
+  x.domain(d3.extent(ptsBreakdown, function(d) { return d.game; }));
+  y.domain([0, d3.max(ptsBreakdown, function(d) {
+    return Math.max(d.pts); })]);
+
+  // Add the valueline path.
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line")
+      .attr("d", valueline);
+
+  // Add the valueline2 path.
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line")
+      .style("stroke", "red")
+      .attr("d", valueline2);
+
+  // Add the X Axis
+  svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(x));
 
-g.append("g")
-      .attr("class", "axis axis--y")
-      .call(d3.axisLeft(y))
-    .append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", 6)
-      .attr("dy", "0.71em")
-      .attr("fill", "#000")
-      .text("Points");
+  // Add the Y Axis
+  svg.append("g")
+      .call(d3.axisLeft(y));
 
-  var city = g.selectAll(".city")
-    .data(ptsByName)
-    .enter().append("g")
-      .attr("class", "city");
-
-  city.append("path")
-      .attr("class", "line")
-      .attr("d", function(d) { return line(d.values); })
-      .style("stroke", "black");
-
-  city.append("text")
-      .datum(function(d) { return {key: d.key, value: d.values[d.values.length - 1]}; })
-      .attr("transform", function(d) { return "translate(" + 10 + "," + 10 + ")"; })
-      .attr("x", 3)
-      .attr("dy", "0.35em")
-      .style("font", "10px sans-serif")
-      .text(function(d) { return 'hi'; });
 
 };
 
 
 
-createPoints();
+
 
 
 
@@ -210,8 +210,7 @@ function populateTeamOverviews(team) {
           salary: 0,
           players : {}
         }
-    }
-
+  }  
 
   for(let playerKey in team){
     let player = team[playerKey],
@@ -259,5 +258,52 @@ function populateTeamOverviews(team) {
 
   let totalGoalies = document.getElementById('overview-total-goaltenders');
       totalGoalies.getElementsByClassName('overview-total-amount')[0].innerHTML = `${teamOverview.goalies.total} Total Goaltenders`;
-      totalGoalies.getElementsByClassName('overview-salary-amount')[0].innerHTML = `$${teamOverview.goalies.salary.toLocaleString()} (${Math.round(teamOverview.goalies.salary / salaryCap * 100)}% of cap)`;         
+      totalGoalies.getElementsByClassName('overview-salary-amount')[0].innerHTML = `$${teamOverview.goalies.salary.toLocaleString()} (${Math.round(teamOverview.goalies.salary / salaryCap * 100)}% of cap)`;
+
+  createTeamPie(teamOverview);             
+}
+
+
+function createTeamPie(teamOverview) {
+  console.log(teamOverview);
+
+//   let width = 960,
+//     height = 500,
+//     radius = Math.min(width, height) / 2;
+
+//   let color = d3.scale.ordinal()
+//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+
+//    var arc = d3.svg.arc()
+//     .outerRadius(radius - 10)
+//     .innerRadius(0);
+
+// var labelArc = d3.svg.arc()
+//     .outerRadius(radius - 40)
+//     .innerRadius(radius - 40);
+
+// var pie = d3.layout.pie()
+//     .sort(null)
+//     .value(function(d) { return d.salary; });
+
+// var svg = d3.select("body").append("svg")
+//     .attr("width", width)
+//     .attr("height", height)
+//   .append("g")
+//     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"); 
+
+//   var g = svg.selectAll(".arc")
+//       .data(pie(teamOverview))
+//       .enter().append("g")
+//       .attr("class", "arc");
+
+//      g.append("path")
+//       .attr("d", arc)
+//       .style("fill", function(d) { return color(d.salary); });   
+
+
+//     g.append("text")
+//       .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+//       .attr("dy", ".35em")
+//       .text(function(d) { return d.salary; });    
 }
