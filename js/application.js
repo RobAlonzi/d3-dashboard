@@ -41,104 +41,117 @@ data.then(v =>{
 
 });
 
-
+//creating 'fake' team pts data and displaying it on the line chart
 let createPoints = () =>  {
-  //creating 'fake' team pts data
+
   let ptsBreakdown = [];
   let outcomes = [0, 1, 2];
   let totalPoints = 0;
+  let totalPointsRiv = 0;
+  let totalPointsRiv2 = 0;
   for (let i = 1; i < 83; i++) {
-      let ptsGained = outcomes[Math.floor(Math.random()*outcomes.length)];
-      totalPoints += ptsGained;
-      ptsBreakdown.push({'name' : 'team', 'game' : i, 'pts' : totalPoints});
-  }
-
-  //creating avg team pts data
-  let totalPointsAvg = 0;
-  for (let i = 1; i < 83; i++) {
-      totalPointsAvg += 1.11;
-      ptsBreakdown.push({'name' : 'avg', 'game' : i, 'pts' : totalPointsAvg});
-  }
-
-  //creating playoff pace team pts data
-  let totalPointsPlf = 0;
-  for (let i = 1; i < 83; i++) {
-      totalPointsPlf += 1.134;
-      ptsBreakdown.push({'name' : 'plf', 'game' : i, 'pts' : totalPointsPlf});
+      totalPoints += outcomes[Math.floor(Math.random()*outcomes.length)];
+      totalPointsRiv += outcomes[Math.floor(Math.random()*outcomes.length)];
+      totalPointsRiv2 += outcomes[Math.floor(Math.random()*outcomes.length)];
+      ptsBreakdown.push([i, totalPoints, totalPointsRiv, totalPointsRiv2]);
   }
 
   //let d3 nest them into proper groupings
-  let ptsByName = d3.nest()
-  .key(function(d) { return d.name; })
-  .entries(ptsBreakdown);
+
+  // set the dimensions and margins of the graph 
+  let margin = {top: 20, right: 20, bottom: 30, left: 50}, 
+      width = 960 - margin.left - margin.right, 
+      height = 500 - margin.top - margin.bottom;
+
+  let x = d3.scaleLinear().range([0, width]); 
+  let y = d3.scaleLinear().range([height, 0]);
+  let z = d3.scaleOrdinal(d3.schemeCategory10);
+
+  let teamLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[1])}),
+      avgLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[2])}),
+      presLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[3])});
 
 
-
-//Setting up svg.
-// set the dimensions and margins of the graph
-var margin = {top: 20, right: 20, bottom: 30, left: 50},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
-
-
-// set the ranges
-var x = d3.scaleLinear().range([0, width]);
-var y = d3.scaleLinear().range([height, 0]);
-
-// define the 1st line
-var valueline = d3.line()
-    .x(function(d) { console.log(d); return x(d.game); })
-    .y(function(d) { return y(d.pts); });
-
-// define the 2nd line
-var valueline2 = d3.line()
-    .x(function(d) { return x(d.game); })
-    .y(function(d) { return y(d.pts); });
-
-// append the svg obgect to the body of the page
-// appends a 'group' element to 'svg'
-// moves the 'group' element to the top left margin
-var svg = d3.select("body").append("svg")
+  let svg = d3.select("#team-standings-line").append("svg")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
-  // Scale the range of the data
-  x.domain(d3.extent(ptsBreakdown, function(d) { return d.game; }));
-  y.domain([0, d3.max(ptsBreakdown, function(d) {
-    return Math.max(d.pts); })]);
 
-  // Add the valueline path.
+  //x.domain(d3.extent(ptsBreakdown, function(d) {  return d[0]; }));
+  x.domain([0, 95]);
+  y.domain([0, d3.max(ptsBreakdown, function(d) { return d3.max(d); })]);  
+
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line team-line")
+      .attr("d", teamLine)
+      .style("stroke", "#8e44ad");  
+
   svg.append("path")
       .data([ptsBreakdown])
       .attr("class", "line")
-      .attr("d", valueline);
-
-  // Add the valueline2 path.
+      .attr("d", avgLine)
+      .style("stroke", "#2980b9");
+      
   svg.append("path")
       .data([ptsBreakdown])
       .attr("class", "line")
-      .style("stroke", "red")
-      .attr("d", valueline2);
+      .attr("d", presLine)
+      .style("stroke", "#d35400");     
 
-  // Add the X Axis
-  svg.append("g")
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][1]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Our Team (${d[81][1]} pts)`; });  
+
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][2]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Division Rival #1 (${d[81][2]} pts)`; });  
+      
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][3]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Division Rival #2 (${d[81][3]} pts)`; });               
+
+   svg.append("g")
       .attr("transform", "translate(0," + height + ")")
       .call(d3.axisBottom(x));
 
-  // Add the Y Axis
-  svg.append("g")
-      .call(d3.axisLeft(y));
 
+   svg.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + 
+                           (height + margin.top + 7) + ")")
+      .style("text-anchor", "middle")
+      .text("Games Played");   
+
+      
+   svg.append("g")
+      .call(d3.axisLeft(y));  
+
+
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Points");          
 
 };
 
 
-
-
-
+createPoints();
 
 
 
@@ -265,7 +278,7 @@ function populateTeamOverviews(team) {
 
 
 function createTeamPie(teamOverview) {
-  console.log(teamOverview);
+  //console.log(teamOverview);
 
 //   let width = 960,
 //     height = 500,
