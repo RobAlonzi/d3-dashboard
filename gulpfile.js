@@ -5,7 +5,7 @@ var gulp = require("gulp"),
 const config = {
     styles: {
         src: ["./scss/application.scss"],
-        watchSrc: './src/css/**/*.scss',
+        watchSrc: './scss/*.scss',
         dest: "./dist/css",
         autoprefix: ["last 2 versions"]
     },

@@ -38,18 +38,22 @@ data.then(v =>{
   populateTeamBreakdown(v);
   //run some math on all players
   populateTeamOverviews(v);
+  //team salary bar chart by player
+  populateTeamBarChart(v);
+  //create fake 'standings' chart
+  createPoints();
 
 });
 
 //creating 'fake' team pts data and displaying it on the line chart
-let createPoints = () =>  {
+function createPoints() {
 
   let ptsBreakdown = [];
   let outcomes = [0, 1, 2];
   let totalPoints = 0;
   let totalPointsRiv = 0;
   let totalPointsRiv2 = 0;
-  for (let i = 1; i < 83; i++) {
+  for (let i = 1; i <= 82; i++) {
       totalPoints += outcomes[Math.floor(Math.random()*outcomes.length)];
       totalPointsRiv += outcomes[Math.floor(Math.random()*outcomes.length)];
       totalPointsRiv2 += outcomes[Math.floor(Math.random()*outcomes.length)];
@@ -59,8 +63,8 @@ let createPoints = () =>  {
   //let d3 nest them into proper groupings
 
   // set the dimensions and margins of the graph 
-  let margin = {top: 20, right: 20, bottom: 30, left: 50}, 
-      width = 960 - margin.left - margin.right, 
+  let margin = {top: 30, right: 130, bottom: 30, left: 50}, 
+      width = 847 - margin.left - margin.right, 
       height = 500 - margin.top - margin.bottom;
 
   let x = d3.scaleLinear().range([0, width]); 
@@ -80,8 +84,7 @@ let createPoints = () =>  {
           "translate(" + margin.left + "," + margin.top + ")");
 
 
-  //x.domain(d3.extent(ptsBreakdown, function(d) {  return d[0]; }));
-  x.domain([0, 95]);
+  x.domain(d3.extent(ptsBreakdown, function(d) {return d[0]; }));
   y.domain([0, d3.max(ptsBreakdown, function(d) { return d3.max(d); })]);  
 
   svg.append("path")
@@ -104,24 +107,24 @@ let createPoints = () =>  {
 
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][1]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][1]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
-      .text(function(d) { return `Our Team (${d[81][1]} pts)`; });  
+      .text(function(d) { return `Our Team (${d[d.length - 1][1]} pts)`; });  
 
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][2]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][2]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
-      .text(function(d) { return `Division Rival #1 (${d[81][2]} pts)`; });  
+      .text(function(d) { return `Division Rival #1 (${d[d.length - 1][2]} pts)`; });  
       
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[81][0]) + "," + y(d[81][3]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][3]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
-      .text(function(d) { return `Division Rival #2 (${d[81][3]} pts)`; });               
+      .text(function(d) { return `Division Rival #2 (${d[d.length - 1][3]} pts)`; });               
 
    svg.append("g")
       .attr("transform", "translate(0," + height + ")")
@@ -130,8 +133,7 @@ let createPoints = () =>  {
 
    svg.append("text")             
       .attr("transform",
-            "translate(" + (width/2) + " ," + 
-                           (height + margin.top + 7) + ")")
+            "translate(" + (width/2) + " ," + (height + margin.top) + ")")
       .style("text-anchor", "middle")
       .text("Games Played");   
 
@@ -151,7 +153,7 @@ let createPoints = () =>  {
 };
 
 
-createPoints();
+
 
 
 
@@ -277,10 +279,63 @@ function populateTeamOverviews(team) {
 }
 
 
+function populateTeamBarChart(teamOverview) {
+
+  let margin = {top: 20, right: 20, bottom:80, left: 40},
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+      // set the ranges
+      let x = d3.scaleBand()
+              .range([0, width])
+              .padding(0.1);
+
+      var y = d3.scaleLinear()
+              .range([height, 0]);
+
+
+  let svg = d3.select("#team-bar-chart").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
+
+
+        x.domain(Object.keys(teamOverview).map(function(d) { return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];}));
+        y.domain([0, Object.keys(teamOverview).map(function(d) { return teamOverview[d]['contract'][yearSelected]['cap-hit'];})]); 
+
+console.log(svg);
+
+
+var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
+        11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
+svg.selectAll("rect")
+    .data(dataset)
+    .enter().append("rect") 
+    .attr("class", "bar")
+    .attr("x", function(d) { console.log('hi'); })
+    .attr("width", x.bandwidth())
+    .attr("y", function(d) { console.log('hi'); })
+    .attr("height", function(d) { console.log('hi'); });  
+
+
+  // add the x Axis
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+      .attr("x", 30)
+      .attr("y", -5)
+      .attr("transform", "rotate(90)");
+
+  // add the y Axis
+  svg.append("g")
+      .call(d3.axisLeft(y));             
+}
+
 function createTeamPie(teamOverview) {
   //console.log(teamOverview);
 
-//   let width = 960,
+//   let width = 847,
 //     height = 500,
 //     radius = Math.min(width, height) / 2;
 
