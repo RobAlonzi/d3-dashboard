@@ -1,11 +1,12 @@
 let salaryCap = 74000000,
+    maxSalary = 14600000,
     yearSelected = '2016-2017',
     freshData;
 
 //getting team data JSON
 let data = new Promise(function (resolve, reject) {
 
-    var xhr = new XMLHttpRequest();
+    let xhr = new XMLHttpRequest();
     xhr.open('GET', '/js/data.json?t=' + Math.random());
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
@@ -154,9 +155,6 @@ function createPoints() {
 
 
 
-
-
-
 function populateTeamBreakdown(team) {
   for(let playerKey in team){
     let player = team[playerKey],
@@ -207,9 +205,11 @@ function switchPlayerCharts(team, playerKey) {
 function populateTeamOverviews(team) {
 
   let teamOverview = {
-        total: 0,
-        salary: 0,
-
+        totals: {
+          total: 0,
+          salary: salaryCap,
+          cap: 0
+        },
         forwards : {
           total: 0,
           salary:0,
@@ -254,14 +254,15 @@ function populateTeamOverviews(team) {
           break;
     }
 
-    teamOverview.total++;
-    teamOverview.salary += player.contract[yearSelected]["cap-hit"];
+    teamOverview.totals.total++;
+    teamOverview.totals.salary -= player.contract[yearSelected]["cap-hit"];
+    teamOverview.totals.cap += player.contract[yearSelected]["cap-hit"];
 
   }
 
   let totalPlayers = document.getElementById('overview-total-players');
-      totalPlayers.getElementsByClassName('overview-total-amount')[0].innerHTML = `${teamOverview.total} Total Players`;
-      totalPlayers.getElementsByClassName('overview-salary-amount')[0].innerHTML = `$${teamOverview.salary.toLocaleString()} (${Math.round(teamOverview.salary / salaryCap * 100)}% of cap)`;
+      totalPlayers.getElementsByClassName('overview-total-amount')[0].innerHTML = `${teamOverview.totals.total} Total Players`;
+      totalPlayers.getElementsByClassName('overview-salary-amount')[0].innerHTML = `$${teamOverview.totals.cap.toLocaleString()} (${Math.round(teamOverview.totals.cap / salaryCap * 100)}% of cap)`;
 
   let totalForwards = document.getElementById('overview-total-forwards');
       totalForwards.getElementsByClassName('overview-total-amount')[0].innerHTML = `${teamOverview.forwards.total} Total Forwards`;
@@ -281,6 +282,15 @@ function populateTeamOverviews(team) {
 
 function populateTeamBarChart(teamOverview) {
 
+  //deletes player if he doesn't have a contract
+  for(let player in teamOverview){
+    let playerObj = teamOverview[player];
+    if(!playerObj["contract"][yearSelected]){
+        delete teamOverview[player];
+    }
+  }
+
+
   let margin = {top: 20, right: 20, bottom:80, left: 60},
       width = 847 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
@@ -289,8 +299,17 @@ function populateTeamBarChart(teamOverview) {
               .range([0, width])
               .padding(0.1);
 
-      var y = d3.scaleLinear()
+      let y = d3.scaleLinear()
               .range([height, 0]);
+
+      let colorRange = d3.scaleLinear();
+          colorRange.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+          if(d['value']["contract"][yearSelected]){
+            return d['value']['contract'][yearSelected]['cap-hit']; 
+          }
+        })]); 
+
+
 
 
   let svg = d3.select("#team-bar-chart").append("svg")
@@ -301,18 +320,14 @@ function populateTeamBarChart(teamOverview) {
 
 
         x.domain(Object.keys(teamOverview).map(function(d) {
-          if(teamOverview[d]["contract"][yearSelected]){
             return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
-          }
         })); 
         y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
-          if(d['value']["contract"][yearSelected]){
             return d['value']['contract'][yearSelected]['cap-hit']; 
-          }
         })]);
 
 
-for (var i = 0, l = teamOverview.length; i < l; i++) {
+for (let i = 0, l = teamOverview.length; i < l; i++) {
     map[teamOverview[i].id] = teamOverview[i];
 }
 
@@ -324,20 +339,17 @@ svg.selectAll(".bar")
     .enter().append("rect") 
     .attr("class", "bar")
     .attr("x", function(d) {
-        if(d['value']["contract"][yearSelected]){ 
-        return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]);
-        } 
+        return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]); 
       })
     .attr("width", x.bandwidth())
+    .attr("fill", function(d) {
+        return d3.interpolatePlasma(colorRange(d['value']['contract'][yearSelected]['cap-hit']));
+      })
     .attr("y", function(d) {
-      if(d['value']["contract"][yearSelected]){
         return y(d['value']['contract'][yearSelected]['cap-hit']);
-      }
       })
     .attr("height", function(d) {
-      if(d['value']["contract"][yearSelected]){
       return height - y(d['value']['contract'][yearSelected]['cap-hit']);
-      }
     });  
 
 
@@ -356,45 +368,50 @@ svg.selectAll(".bar")
 }
 
 function createTeamPie(teamOverview) {
-  //console.log(teamOverview);
+  teamOverview = d3.entries(teamOverview);
 
-//   let width = 847,
-//     height = 500,
-//     radius = Math.min(width, height) / 2;
+let width = 960,
+    height = 500,
+    radius = Math.min(width, height) / 2;
 
-//   let color = d3.scale.ordinal()
-//     .range(["#98abc5", "#8a89a6", "#7b6888", "#6b486b", "#a05d56", "#d0743c", "#ff8c00"]);
+let color = d3.scaleOrdinal(d3.schemeCategory10);
 
-//    var arc = d3.svg.arc()
-//     .outerRadius(radius - 10)
-//     .innerRadius(0);
+let arc = d3.arc()
+    .outerRadius(radius - 10)
+    .innerRadius(0);
 
-// var labelArc = d3.svg.arc()
-//     .outerRadius(radius - 40)
-//     .innerRadius(radius - 40);
+let labelArc = d3.arc()
+    .outerRadius(radius - 30)
+    .innerRadius(radius);
 
-// var pie = d3.layout.pie()
-//     .sort(null)
-//     .value(function(d) { return d.salary; });
+let pie = d3.pie()
+    .sort(null)
+    .value(function(d) { return d.value.salary; });
 
-// var svg = d3.select("body").append("svg")
-//     .attr("width", width)
-//     .attr("height", height)
-//   .append("g")
-//     .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")"); 
+let svg = d3.select("#salary-pie-chart").append("svg")
+    .attr("width", width)
+    .attr("height", height)
+    .append("g")
+    .attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
 
-//   var g = svg.selectAll(".arc")
-//       .data(pie(teamOverview))
-//       .enter().append("g")
-//       .attr("class", "arc");
+let g = svg.selectAll(".arc")
+          .data(pie(teamOverview))
+          .enter().append("g")
+          .attr("class", "arc");
 
-//      g.append("path")
-//       .attr("d", arc)
-//       .style("fill", function(d) { return color(d.salary); });   
+    g.append("path")
+      .attr("d", arc)
+      .style("fill", function(d) {return color(d.data.key); });
 
+    g.append("text")
+      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+      .attr("dy", ".35em")
+      .text(function(d) { return `${d.data.key}`; });
 
-//     g.append("text")
-//       .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
-//       .attr("dy", ".35em")
-//       .text(function(d) { return d.salary; });    
+    g.append("text")
+      .attr("transform", function(d) { return "translate(" + labelArc.centroid(d) + ")"; })
+      .attr("dy", "1.5em")
+      .text(function(d) { return `$${d.data.value.salary.toLocaleString()}`; });  
+
+  
 }
