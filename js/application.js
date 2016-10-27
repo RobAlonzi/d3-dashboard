@@ -170,7 +170,7 @@ function populateTeamBreakdown(team) {
         a.className = 'list-group-item';
         a.href="javascript:;";
         a.setAttribute("player-key", playerKey);
-        a.innerHTML = `${player.name}<span class="pull-right text-muted small">$${player.contract["2016-2017"]["nhl-salary"].toLocaleString()}</span>`;
+        a.innerHTML = `${player.name}<span class="pull-right text-muted small">$${player.contract[yearSelected]["nhl-salary"].toLocaleString()}</span>`;
 
     switch(pos){
       case 'F':
@@ -281,7 +281,7 @@ function populateTeamOverviews(team) {
 
 function populateTeamBarChart(teamOverview) {
 
-  let margin = {top: 20, right: 20, bottom:80, left: 40},
+  let margin = {top: 20, right: 20, bottom:80, left: 60},
       width = 847 - margin.left - margin.right,
       height = 500 - margin.top - margin.bottom;
       // set the ranges
@@ -300,22 +300,45 @@ function populateTeamBarChart(teamOverview) {
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
 
 
-        x.domain(Object.keys(teamOverview).map(function(d) { return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];}));
-        y.domain([0, Object.keys(teamOverview).map(function(d) { return teamOverview[d]['contract'][yearSelected]['cap-hit'];})]); 
+        x.domain(Object.keys(teamOverview).map(function(d) {
+          if(teamOverview[d]["contract"][yearSelected]){
+            return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
+          }
+        })); 
+        y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+          if(d['value']["contract"][yearSelected]){
+            return d['value']['contract'][yearSelected]['cap-hit']; 
+          }
+        })]);
 
-console.log(svg);
+
+for (var i = 0, l = teamOverview.length; i < l; i++) {
+    map[teamOverview[i].id] = teamOverview[i];
+}
 
 
-var dataset = [ 5, 10, 13, 19, 21, 25, 22, 18, 15, 13,
-        11, 12, 15, 20, 18, 17, 16, 18, 23, 25 ];
-svg.selectAll("rect")
-    .data(dataset)
+
+
+svg.selectAll(".bar")
+    .data(d3.entries(teamOverview))
     .enter().append("rect") 
     .attr("class", "bar")
-    .attr("x", function(d) { console.log('hi'); })
+    .attr("x", function(d) {
+        if(d['value']["contract"][yearSelected]){ 
+        return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]);
+        } 
+      })
     .attr("width", x.bandwidth())
-    .attr("y", function(d) { console.log('hi'); })
-    .attr("height", function(d) { console.log('hi'); });  
+    .attr("y", function(d) {
+      if(d['value']["contract"][yearSelected]){
+        return y(d['value']['contract'][yearSelected]['cap-hit']);
+      }
+      })
+    .attr("height", function(d) {
+      if(d['value']["contract"][yearSelected]){
+      return height - y(d['value']['contract'][yearSelected]['cap-hit']);
+      }
+    });  
 
 
   // add the x Axis
