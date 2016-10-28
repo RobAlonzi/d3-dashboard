@@ -178,7 +178,7 @@ function switchPlayerCharts(team, playerKey) {
 function populateTeamOverviews(team) {
 
   var teamOverview = {
-    totals: {
+    space: {
       total: 0,
       salary: salaryCap,
       cap: 0
@@ -226,14 +226,14 @@ function populateTeamOverviews(team) {
         break;
     }
 
-    teamOverview.totals.total++;
-    teamOverview.totals.salary -= player.contract[yearSelected]["cap-hit"];
-    teamOverview.totals.cap += player.contract[yearSelected]["cap-hit"];
+    teamOverview.space.total++;
+    teamOverview.space.salary -= player.contract[yearSelected]["cap-hit"];
+    teamOverview.space.cap += player.contract[yearSelected]["cap-hit"];
   }
 
   var totalPlayers = document.getElementById('overview-total-players');
-  totalPlayers.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.totals.total + ' Total Players';
-  totalPlayers.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.totals.cap.toLocaleString() + ' (' + Math.round(teamOverview.totals.cap / salaryCap * 100) + '% of cap)';
+  totalPlayers.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.space.total + ' Total Players';
+  totalPlayers.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.space.cap.toLocaleString() + ' (' + Math.round(teamOverview.space.cap / salaryCap * 100) + '% of cap)';
 
   var totalForwards = document.getElementById('overview-total-forwards');
   totalForwards.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.forwards.total + ' Total Forwards';
@@ -308,37 +308,90 @@ function populateTeamBarChart(teamOverview) {
 function createTeamPie(teamOverview) {
   teamOverview = d3.entries(teamOverview);
 
-  var width = 960,
-      height = 500,
-      radius = Math.min(width, height) / 2;
+  var margin = { top: 20, right: 20, bottom: 20, left: 20 },
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom,
+      radius = Math.min(width, height) / 2,
+      donutWidth = 75,
+      legendRectSize = 18,
+      legendSpacing = 4;
 
   var color = d3.scaleOrdinal(d3.schemeCategory10);
 
-  var arc = d3.arc().outerRadius(radius - 10).innerRadius(0);
+  var svg = d3.select('#salary-pie-chart').append('svg').attr('width', width).attr('height', height).append('g').attr('transform', 'translate(' + width / 2 + ',' + height / 2 + ')');
 
-  var labelArc = d3.arc().outerRadius(radius - 30).innerRadius(radius);
+  var arc = d3.arc().innerRadius(radius - donutWidth).outerRadius(radius);
 
-  var pie = d3.pie().sort(null).value(function (d) {
+  var pie = d3.pie().value(function (d) {
     return d.value.salary;
-  });
+  }).sort(null);
 
-  var svg = d3.select("#salary-pie-chart").append("svg").attr("width", width).attr("height", height).append("g").attr("transform", "translate(" + width / 2 + "," + height / 2 + ")");
+  var tooltip = d3.select('#salary-pie-chart').append('div').attr('class', 'pie-tooltip');
 
-  var g = svg.selectAll(".arc").data(pie(teamOverview)).enter().append("g").attr("class", "arc");
+  tooltip.append('div').attr('class', 'label');
 
-  g.append("path").attr("d", arc).style("fill", function (d) {
+  tooltip.append('div').attr('class', 'count');
+
+  tooltip.append('div').attr('class', 'percent');
+
+  var path = svg.selectAll('path').data(pie(teamOverview)).enter().append('path').attr('d', arc).attr('fill', function (d, i) {
     return color(d.data.key);
   });
 
-  g.append("text").attr("transform", function (d) {
-    return "translate(" + labelArc.centroid(d) + ")";
-  }).attr("dy", ".35em").text(function (d) {
-    return '' + d.data.key;
+  path.on('mouseover', function (d) {
+    var total = d3.sum(teamOverview.map(function (d) {
+      return d.value.salary;
+    }));
+    var percent = Math.round(1000 * d.data.value.salary / salaryCap) / 10;
+    tooltip.select('.label').html(d.data.key);
+    tooltip.select('.count').html('$' + d.data.value.salary.toLocaleString());
+    tooltip.select('.percent').html(percent + '% of cap');
+    tooltip.style('display', 'block');
   });
 
-  g.append("text").attr("transform", function (d) {
-    return "translate(" + labelArc.centroid(d) + ")";
-  }).attr("dy", "1.5em").text(function (d) {
-    return '$' + d.data.value.salary.toLocaleString();
+  path.on('mouseout', function () {
+    tooltip.style('display', 'none');
   });
+
+  path.on('mousemove', function (d) {
+    tooltip.style('top', d3.event.pageY - 250 + 'px').style('left', d3.event.pageX + 'px');
+  });
+
+  var legend = svg.selectAll('.legend').data(color.domain()).enter().append('g').attr('class', 'legend').attr('transform', function (d, i) {
+    var height = legendRectSize + legendSpacing;
+    var offset = height * color.domain().length / 2;
+    var horz = -2 * legendRectSize;
+    var vert = i * height - offset;
+    return 'translate(' + horz + ',' + vert + ')';
+  });
+
+  legend.append('rect').attr('width', legendRectSize).attr('height', legendRectSize).style('fill', color).style('stroke', color);
+
+  legend.append('text').attr('x', legendRectSize + legendSpacing).attr('y', legendRectSize - legendSpacing).text(function (d) {
+    return d;
+  });
+}
+
+document.getElementById('change-year-btn').onclick = function (evt) {
+  var event = evt || window.event,
+      target = event.target || event.srcElement,
+      yearKey = target.getAttribute('data-year-toggle');
+
+  if (yearKey) {
+    switchYear(yearKey);
+  }
+};
+
+function switchYear(year) {
+  yearSelected = year;
+
+  var fresherData = JSON.parse(JSON.stringify(freshData));
+  //list all players on team breakdown section
+  populateTeamBreakdown(fresherData);
+  //run some math on all players
+  populateTeamOverviews(fresherData);
+  //team salary bar chart by player
+  populateTeamBarChart(fresherData);
+  //create fake 'standings' chart
+  createPoints();
 }

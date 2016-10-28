@@ -411,4 +411,26 @@ table.dataTable thead .sorting:after {
   stroke: steelblue;
   stroke-width: 1.5px; }
 
+#salary-pie-chart {
+  position: relative; }
+  #salary-pie-chart svg g path {
+    cursor: pointer; }
+  #salary-pie-chart g.legend text {
+    text-transform: capitalize; }
+  #salary-pie-chart .pie-tooltip {
+    background: #eee;
+    box-shadow: 0 0 5px #999999;
+    color: #333;
+    display: none;
+    font-size: 12px;
+    padding: 10px;
+    position: absolute;
+    text-align: center;
+    width: 200px;
+    z-index: 10; }
+    #salary-pie-chart .pie-tooltip .label {
+      font-size: 16px;
+      color: #000;
+      text-transform: capitalize; }
+
 /*# sourceMappingURL=application.css.map */
