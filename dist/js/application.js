@@ -40,7 +40,8 @@ data.then(function (v) {
   //list all players on team breakdown section
   populateTeamBreakdown(v);
   //run some math on all players
-  populateTeamOverviews(v);
+  var overview = populateTeamOverviews(v);
+  createTeamPie(overview);
   //team salary bar chart by player
   populateTeamBarChart(v);
   //create fake 'standings' chart
@@ -157,17 +158,17 @@ function populateTeamBreakdown(team) {
       default:
         break;
     }
-
-    document.getElementById('team-breakdown').onclick = function (evt) {
-      var event = evt || window.event,
-          target = event.target || event.srcElement,
-          playerKey = target.getAttribute('player-key');
-
-      if (playerKey) {
-        switchPlayerCharts(team, playerKey);
-      }
-    };
   }
+
+  document.getElementById('team-breakdown').onclick = function (evt) {
+    var event = evt || window.event,
+        target = event.target || event.srcElement,
+        playerKey = target.getAttribute('player-key');
+
+    if (playerKey) {
+      switchPlayerCharts(team, playerKey);
+    }
+  };
 }
 
 function switchPlayerCharts(team, playerKey) {
@@ -247,7 +248,9 @@ function populateTeamOverviews(team) {
   totalGoalies.getElementsByClassName('overview-total-amount')[0].innerHTML = teamOverview.goalies.total + ' Total Goaltenders';
   totalGoalies.getElementsByClassName('overview-salary-amount')[0].innerHTML = '$' + teamOverview.goalies.salary.toLocaleString() + ' (' + Math.round(teamOverview.goalies.salary / salaryCap * 100) + '% of cap)';
 
-  createTeamPie(teamOverview);
+  //createTeamPie(teamOverview);  
+
+  return teamOverview;
 }
 
 function populateTeamBarChart(teamOverview) {
@@ -338,6 +341,8 @@ function createTeamPie(teamOverview) {
     return color(d.data.key);
   });
 
+  path.transition().duration(1000).attrTween("d", arcTween);
+
   path.on('mouseover', function (d) {
     var total = d3.sum(teamOverview.map(function (d) {
       return d.value.salary;
@@ -370,6 +375,16 @@ function createTeamPie(teamOverview) {
   legend.append('text').attr('x', legendRectSize + legendSpacing).attr('y', legendRectSize - legendSpacing).text(function (d) {
     return d;
   });
+
+  function arcTween(d) {
+    var i = d3.interpolate(this._current, d);
+
+    this._current = i(0);
+
+    return function (t) {
+      return arc(i(t));
+    };
+  }
 }
 
 document.getElementById('change-year-btn').onclick = function (evt) {
@@ -387,11 +402,94 @@ function switchYear(year) {
 
   var fresherData = JSON.parse(JSON.stringify(freshData));
   //list all players on team breakdown section
-  populateTeamBreakdown(fresherData);
+  updateTeamBreakdown(fresherData);
   //run some math on all players
-  populateTeamOverviews(fresherData);
+  var overview = populateTeamOverviews(fresherData);
+  updateTeamPie(overview);
   //team salary bar chart by player
   populateTeamBarChart(fresherData);
   //create fake 'standings' chart
   createPoints();
+}
+
+function updateTeamBreakdown(team) {
+
+  var forwardsDiv = document.getElementById('team-breakdown-forwards'),
+      defenseDiv = document.getElementById('team-breakdown-defense'),
+      goaliesDiv = document.getElementById('team-breakdown-goalies');
+
+  while (forwardsDiv.firstChild) {
+    forwardsDiv.removeChild(forwardsDiv.firstChild);
+  }
+
+  while (defenseDiv.firstChild) {
+    defenseDiv.removeChild(defenseDiv.firstChild);
+  }
+
+  while (goaliesDiv.firstChild) {
+    goaliesDiv.removeChild(goaliesDiv.firstChild);
+  }
+
+  for (var playerKey in team) {
+    var player = team[playerKey],
+        pos = player.pos;
+
+    if (!player.contract[yearSelected]) continue;
+
+    var a = document.createElement('a');
+    a.className = 'list-group-item';
+    a.href = "javascript:;";
+    a.setAttribute("player-key", playerKey);
+    a.innerHTML = player.name + '<span class="pull-right text-muted small">$' + player.contract[yearSelected]["nhl-salary"].toLocaleString() + '</span>';
+
+    switch (pos) {
+      case 'F':
+        forwardsDiv.appendChild(a);
+        break;
+      case 'D':
+        defenseDiv.appendChild(a);
+        break;
+      case 'G':
+        goaliesDiv.appendChild(a);
+        break;
+      default:
+        break;
+    }
+  }
+}
+
+function updateTeamPie(teamOverview) {
+
+  var margin = { top: 20, right: 20, bottom: 20, left: 20 },
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom,
+      radius = Math.min(width, height) / 2,
+      donutWidth = 75;
+
+  teamOverview = d3.entries(teamOverview);
+
+  var pie = d3.pie().value(function (d) {
+    return d.value.salary;
+  }).sort(null);
+
+  var arc = d3.arc().innerRadius(radius - donutWidth).outerRadius(radius);
+
+  var svg = d3.select('#salary-pie-chart svg');
+  var path = svg.selectAll("path");
+
+  var data0 = path.data();
+  var data1 = pie(teamOverview);
+
+  path = path.data(data1);
+  path.transition().duration(1000).attrTween("d", arcTween);
+
+  function arcTween(d) {
+    var i = d3.interpolate(this._current, d);
+
+    this._current = i(0);
+
+    return function (t) {
+      return arc(i(t));
+    };
+  }
 }
