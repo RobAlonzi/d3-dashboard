@@ -509,7 +509,7 @@ function switchYear(year) {
   let overview = populateTeamOverviews(fresherData);
   updateTeamPie(overview);
   //team salary bar chart by player
-  populateTeamBarChart(fresherData);
+  updateTeamBarChart(fresherData);
   //create fake 'standings' chart
   createPoints();
 }
@@ -588,12 +588,10 @@ function updateTeamPie(teamOverview) {
   let svg = d3.select('#salary-pie-chart svg');
   let path = svg.selectAll("path");
 
-  var data0 = path.data();
-  let data1 = pie(teamOverview);
+  let data = pie(teamOverview);
 
-  path = path.data(data1);
-  path
-      .transition()
+  path = path.data(data);
+  path.transition()
       .duration(1000)
       .attrTween("d", arcTween);
 
@@ -607,4 +605,78 @@ function updateTeamPie(teamOverview) {
     }
 
   }
+}
+
+
+
+
+
+
+
+function updateTeamBarChart(teamOverview) {
+
+  //deletes player if he doesn't have a contract
+  for(let player in teamOverview){
+    let playerObj = teamOverview[player];
+    if(!playerObj["contract"][yearSelected]){
+        delete teamOverview[player];
+    }
+  }
+
+
+  let margin = {top: 20, right: 20, bottom:80, left: 60},
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+      // set the ranges
+      let x = d3.scaleBand()
+              .range([0, width])
+              .padding(0.1);
+
+      let y = d3.scaleLinear()
+              .range([height, 0]);
+
+      let colorRange = d3.scaleLinear();
+          colorRange.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+          if(d['value']["contract"][yearSelected]){
+            return d['value']['contract'][yearSelected]['cap-hit']; 
+          }
+        })]); 
+
+
+
+
+    let svg = d3.select("#team-bar-chart svg");
+    let bar = svg.selectAll(".bar");
+
+    x.domain(Object.keys(teamOverview).map(function(d) {
+        return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
+    })); 
+
+    y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+        return d['value']['contract'][yearSelected]['cap-hit']; 
+    })]);
+
+
+for (let i = 0, l = teamOverview.length; i < l; i++) {
+    map[teamOverview[i].id] = teamOverview[i];
+}
+
+
+svg.selectAll(".bar")
+    .data(d3.entries(teamOverview))
+    .enter().append("rect") 
+    .attr("class", "bar")
+    .attr("x", function(d) {
+        return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]); 
+      })
+    .attr("width", x.bandwidth())
+    .attr("fill", function(d) {
+        return d3.interpolatePlasma(colorRange(d['value']['contract'][yearSelected]['cap-hit']));
+      })
+    .attr("y", function(d) {
+        return y(d['value']['contract'][yearSelected]['cap-hit']);
+      })
+    .attr("height", function(d) {
+      return height - y(d['value']['contract'][yearSelected]['cap-hit']);
+    });  
 }
