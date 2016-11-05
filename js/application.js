@@ -38,7 +38,8 @@ data.then(v =>{
   //list all players on team breakdown section
   populateTeamBreakdown(v);
   //run some math on all players
-  populateTeamOverviews(v);
+  let overview = populateTeamOverviews(v);
+  createTeamPie(overview);
   //team salary bar chart by player
   populateTeamBarChart(v);
   //create fake 'standings' chart
@@ -183,6 +184,7 @@ function populateTeamBreakdown(team) {
       default:
           break;
     }
+  }
 
     document.getElementById('team-breakdown').onclick = (evt) =>{
       let event = evt || window.event,
@@ -193,7 +195,6 @@ function populateTeamBreakdown(team) {
             switchPlayerCharts(team, playerKey);
           }
     }
-  }
 }
 
 function switchPlayerCharts(team, playerKey) {
@@ -276,7 +277,9 @@ function populateTeamOverviews(team) {
       totalGoalies.getElementsByClassName('overview-total-amount')[0].innerHTML = `${teamOverview.goalies.total} Total Goaltenders`;
       totalGoalies.getElementsByClassName('overview-salary-amount')[0].innerHTML = `$${teamOverview.goalies.salary.toLocaleString()} (${Math.round(teamOverview.goalies.salary / salaryCap * 100)}% of cap)`;
 
-  createTeamPie(teamOverview);             
+  //createTeamPie(teamOverview);  
+
+  return teamOverview;           
 }
 
 
@@ -418,6 +421,10 @@ function createTeamPie(teamOverview) {
       .attr('fill', function(d, i) { 
         return color(d.data.key); 
       });
+      
+      path.transition()
+          .duration(1000)
+          .attrTween("d", arcTween);
 
     path.on('mouseover', function(d) {                         
       let total = d3.sum(teamOverview.map(function(d) {                
@@ -463,6 +470,19 @@ function createTeamPie(teamOverview) {
       .attr('y', legendRectSize - legendSpacing)
       .text(function(d) { return d; });
 
+
+
+  function arcTween(d) {
+    var i = d3.interpolate(this._current, d);
+
+    this._current = i(0);
+
+    return function(t) {
+      return arc(i(t))
+    }
+
+  }  
+
   
 }
 
@@ -484,11 +504,179 @@ function switchYear(year) {
   
   let fresherData = JSON.parse(JSON.stringify(freshData));
   //list all players on team breakdown section
-  populateTeamBreakdown(fresherData);
+  updateTeamBreakdown(fresherData);
   //run some math on all players
-  populateTeamOverviews(fresherData);
+  let overview = populateTeamOverviews(fresherData);
+  updateTeamPie(overview);
   //team salary bar chart by player
-  populateTeamBarChart(fresherData);
+  updateTeamBarChart(fresherData);
   //create fake 'standings' chart
   createPoints();
+}
+
+
+
+
+function updateTeamBreakdown(team) {
+
+  let forwardsDiv = document.getElementById(`team-breakdown-forwards`),
+      defenseDiv = document.getElementById(`team-breakdown-defense`),
+      goaliesDiv = document.getElementById(`team-breakdown-goalies`);
+
+  while (forwardsDiv.firstChild) {
+    forwardsDiv.removeChild(forwardsDiv.firstChild);
+  }   
+  
+  while (defenseDiv.firstChild) {
+    defenseDiv.removeChild(defenseDiv.firstChild);
+  } 
+
+  while (goaliesDiv.firstChild) {
+    goaliesDiv.removeChild(goaliesDiv.firstChild);
+  }    
+
+  for(let playerKey in team){
+    let player = team[playerKey],
+        pos = player.pos;
+
+    if(!player.contract[yearSelected])
+        continue;
+    
+
+    let a = document.createElement('a');
+        a.className = 'list-group-item';
+        a.href="javascript:;";
+        a.setAttribute("player-key", playerKey);
+        a.innerHTML = `${player.name}<span class="pull-right text-muted small">$${player.contract[yearSelected]["nhl-salary"].toLocaleString()}</span>`;
+
+    switch(pos){
+      case 'F':
+          forwardsDiv.appendChild(a);
+      break;
+      case 'D':
+          defenseDiv.appendChild(a);
+          break;
+      case 'G':
+          goaliesDiv.appendChild(a);
+          break;
+      default:
+          break;
+    }
+  }
+}
+
+
+
+function updateTeamPie(teamOverview) {
+
+  let margin = {top: 20, right: 20, bottom:20, left: 20},
+    width = 847 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom,
+    radius = Math.min(width, height) / 2,
+    donutWidth = 75;
+
+  teamOverview = d3.entries(teamOverview);
+
+  let pie = d3.pie()
+    .value(function(d) { return d.value.salary; })
+    .sort(null);
+
+  let arc = d3.arc()
+    .innerRadius(radius - donutWidth)
+    .outerRadius(radius);  
+
+  let svg = d3.select('#salary-pie-chart svg');
+  let path = svg.selectAll("path");
+
+  let data = pie(teamOverview);
+
+  path = path.data(data);
+  path.transition()
+      .duration(1000)
+      .attrTween("d", arcTween);
+
+  function arcTween(d) {
+    var i = d3.interpolate(this._current, d);
+
+    this._current = i(0);
+
+    return function(t) {
+      return arc(i(t))
+    }
+
+  }
+}
+
+
+
+
+
+
+
+function updateTeamBarChart(teamOverview) {
+
+  //deletes player if he doesn't have a contract
+  for(let player in teamOverview){
+    let playerObj = teamOverview[player];
+    if(!playerObj["contract"][yearSelected]){
+        delete teamOverview[player];
+    }
+  }
+
+
+  let margin = {top: 20, right: 20, bottom:80, left: 60},
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+      // set the ranges
+      let x = d3.scaleBand()
+              .range([0, width])
+              .padding(0.1);
+
+      let y = d3.scaleLinear()
+              .range([height, 0]);
+
+      let colorRange = d3.scaleLinear();
+          colorRange.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+          if(d['value']["contract"][yearSelected]){
+            return d['value']['contract'][yearSelected]['cap-hit']; 
+          }
+        })]); 
+
+
+
+
+    let svg = d3.select("#team-bar-chart svg");
+    let bar = svg.selectAll(".bar");
+
+    x.domain(Object.keys(teamOverview).map(function(d) {
+        return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
+    })); 
+
+    y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+        return d['value']['contract'][yearSelected]['cap-hit']; 
+    })]);
+
+
+for (let i = 0, l = teamOverview.length; i < l; i++) {
+    map[teamOverview[i].id] = teamOverview[i];
+}
+
+
+svg.selectAll(".bar")
+    .data(d3.entries(teamOverview))
+    .enter().append("rect") 
+    .attr("class", "bar")
+    .attr("x", function(d) {
+        return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]); 
+      })
+    .attr("width", x.bandwidth())
+    .attr("fill", function(d) {
+        return d3.interpolatePlasma(colorRange(d['value']['contract'][yearSelected]['cap-hit']));
+      })
+    .attr("y", function(d) {
+        return y(d['value']['contract'][yearSelected]['cap-hit']);
+      })
+    .attr("height", function(d) {
+      return height - y(d['value']['contract'][yearSelected]['cap-hit']);
+    });  
 }
