@@ -89,7 +89,8 @@ function createPoints() {
     return y(d[3]);
   });
 
-  var svg = d3.select("#team-standings-line").append("svg").attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+  var svg = d3.select("#team-standings-line").append("svg");
+  svg.attr("width", width + margin.left + margin.right).attr("height", height + margin.top + margin.bottom).append("g").attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
   x.domain(d3.extent(ptsBreakdown, function (d) {
     return d[0];

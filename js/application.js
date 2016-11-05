@@ -77,11 +77,11 @@ function createPoints() {
       presLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[3])});
 
 
-  let svg = d3.select("#team-standings-line").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-    .attr("transform",
+  let svg = d3.select("#team-standings-line").append("svg");
+      svg.attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+         .append("g")
+         .attr("transform",
           "translate(" + margin.left + "," + margin.top + ")");
 
 
