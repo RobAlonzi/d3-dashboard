@@ -396,8 +396,7 @@ document.getElementById('change-year-btn').onclick = function (evt) {
 function switchYear(year) {
   yearSelected = year;
 
-  var mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0];
-  mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
+  changeDom('team');
 
   var fresherData = JSON.parse(JSON.stringify(freshData));
   //list all players on team breakdown section
@@ -547,14 +546,134 @@ function updateTeamBarChart(teamOverview) {
 }
 
 function switchPlayerCharts(team, playerKey) {
-  var player = team[playerKey],
-      mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0];
+  var player = team[playerKey];
 
-  document.getElementsByTagName('h1')[0].innerHTML = player.name;
+  changeDom('player', player.name);
 
-  if (mainCapBreakdown.className.indexOf('hide') === -1) {
-    mainCapBreakdown.className += ' hide';
+  //showPlayerBreakdown(player);
+  generatePlayerStats();
+}
+
+function changeDom(view, name) {
+  var pageTitle = document.getElementsByTagName('h1')[0],
+      mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0],
+      chartOneTitle = document.getElementById('chart-1-title'),
+      chartTwoTitle = document.getElementById('chart-2-title');
+
+  var teamPieChart = document.getElementById('salary-pie-chart'),
+      teamBarChart = document.getElementById('team-bar-chart'),
+      teamStandingsContainer = document.getElementById('team-standings-conatiner');
+
+  //player vars
+  var playerSalaryChart = document.getElementById('player-salary-chart'),
+      playerScatterPlot = document.getElementById('player-scatter-plot');
+
+  if (view === 'player') {
+    pageTitle.innerHTML = name;
+
+    chartOneTitle.innerHTML = 'Player Salary Breakdown';
+    chartTwoTitle.innerHTML = 'Player Corsi Plot';
+
+    if (mainCapBreakdown.className.indexOf('hide') === -1) {
+      mainCapBreakdown.className += ' hide';
+    }
+
+    if (teamPieChart.className.indexOf('hide') === -1) {
+      teamPieChart.className += ' hide';
+    }
+
+    if (teamBarChart.className.indexOf('hide') === -1) {
+      teamBarChart.className += ' hide';
+    }
+
+    if (teamStandingsContainer.className.indexOf('hide') === -1) {
+      teamStandingsContainer.className += ' hide';
+    }
+
+    playerSalaryChart.className = playerSalaryChart.className.replace(/\b\shide\b/, "");
+    playerScatterPlot.className = playerScatterPlot.className.replace(/\b\shide\b/, "");
+  } else {
+    pageTitle.innerHTML = 'Team Breakdown';
+    chartOneTitle.innerHTML = 'Team Cap Pie Chart';
+    chartTwoTitle.innerHTML = 'Player Salaries Bar Chart';
+
+    if (playerSalaryChart.className.indexOf('hide') === -1) {
+      playerSalaryChart.className += ' hide';
+    }
+
+    if (playerScatterPlot.className.indexOf('hide') === -1) {
+      playerScatterPlot.className += ' hide';
+    }
+
+    mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
+    teamStandingsContainer.className = teamStandingsContainer.className.replace(/\b\shide\b/, "");
+    teamBarChart.className = teamBarChart.className.replace(/\b\shide\b/, "");
+    teamPieChart.className = teamPieChart.className.replace(/\b\shide\b/, "");
+  }
+}
+
+function generatePlayerStats() {
+
+  //Width and height
+  var w = 700;
+  var h = 500;
+  var padding = 30;
+
+  //Dynamic, random dataset
+  var dataset = [];
+  var numDataPoints = 82;
+  for (var i = 0; i < numDataPoints; i++) {
+    var corsiRating = (Math.random() * 100).toFixed(1);
+    var toi = Math.floor(Math.random() * 30) + 1;
+
+    dataset.push([i, toi, corsiRating]);
   }
 
-  showPlayerBreakdown(player);
+  //Create scale functions
+  var xScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
+    return d[1];
+  })]).range([padding, w - padding * 2]);
+
+  var yScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
+    return d[2];
+  })]).range([h - padding, padding]);
+
+  var rScale = d3.scaleLinear().domain([0, d3.max(dataset, function (d) {
+    return d[2];
+  })]).range([2, 5]);
+
+  //var formatAsPercentage = d3.format(".1%");
+  var xAxis = d3.axisBottom(xScale).ticks(5);
+  var yAxis = d3.axisLeft(yScale).ticks(5); //.tickFormat(formatAsPercentage);
+
+
+  //Create SVG element
+  var svg = d3.select("#player-scatter-plot").append("svg").attr("width", w + padding).attr("height", h + padding);
+
+  // Define the div for the tooltip
+  var div = svg.append("div").attr("class", "tooltip-player-scatter").style("opacity", 0);
+
+  //Create circles
+  svg.selectAll("circle").data(dataset).enter().append("circle").attr("cx", function (d) {
+    return xScale(d[1]);
+  }).attr("cy", function (d) {
+    return yScale(d[2]);
+  }).attr("r", function (d) {
+    return rScale(d[2]);
+  }).on("mouseover", function (d) {
+    div.transition().duration(200).style("opacity", .9);
+    div.html("hi").style("left", d3.event.pageX + "px").style("top", d3.event.pageY - 28 + "px");
+  }).on("mouseout", function (d) {
+    div.transition().duration(500).style("opacity", 0);
+  });
+
+  //Create X axis
+  svg.append("g").attr("class", "axis").attr("transform", "translate(0," + (h - padding) + ")").call(xAxis);
+
+  svg.append("text").attr("transform", "translate(" + w / 2 + " ," + h + ")").style("text-anchor", "middle").text("Minutes Played");
+
+  //Create Y axis
+  svg.append("g").attr("class", "axis").attr("transform", "translate(" + padding + ",0)").call(yAxis);
+
+  svg.append("text").attr("transform", "rotate(-90)").attr("y", "-3px").attr("x", 0 - h / 2).attr("dy", "1em").style("text-anchor", "middle").text("Corsi (%)");
 }
