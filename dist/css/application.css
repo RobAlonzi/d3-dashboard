@@ -433,4 +433,8 @@ table.dataTable thead .sorting:after {
       color: #000;
       text-transform: capitalize; }
 
+.hide {
+  display: none;
+  visibility: none; }
+
 /*# sourceMappingURL=application.css.map */

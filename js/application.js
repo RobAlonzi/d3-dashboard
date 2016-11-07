@@ -65,7 +65,7 @@ function createPoints() {
   //let d3 nest them into proper groupings
 
   // set the dimensions and margins of the graph 
-  let margin = {top: 30, right: 130, bottom: 30, left: 50}, 
+  let margin = {top: 50, right: 130, bottom: 30, left: 50}, 
       width = 847 - margin.left - margin.right, 
       height = 500 - margin.top - margin.bottom;
 
@@ -195,11 +195,6 @@ function populateTeamBreakdown(team) {
             switchPlayerCharts(team, playerKey);
           }
     }
-}
-
-function switchPlayerCharts(team, playerKey) {
-  let player = team[playerKey];
-  console.log(player);
 }
 
 
@@ -359,6 +354,7 @@ svg.selectAll(".bar")
   // add the x Axis
   svg.append("g")
       .attr("transform", "translate(0," + height + ")")
+      .attr("class", "bar-x-axis")
       .call(d3.axisBottom(x))
       .selectAll("text")
       .attr("x", 30)
@@ -367,6 +363,7 @@ svg.selectAll(".bar")
 
   // add the y Axis
   svg.append("g")
+      .attr("class", "bar-y-axis")
       .call(d3.axisLeft(y));             
 }
 
@@ -501,6 +498,9 @@ document.getElementById('change-year-btn').onclick = (evt) =>{
 
 function switchYear(year) {
   yearSelected = year;
+
+  let mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0];
+      mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
   
   let fresherData = JSON.parse(JSON.stringify(freshData));
   //list all players on team breakdown section
@@ -510,8 +510,6 @@ function switchYear(year) {
   updateTeamPie(overview);
   //team salary bar chart by player
   updateTeamBarChart(fresherData);
-  //create fake 'standings' chart
-  createPoints();
 }
 
 
@@ -644,22 +642,27 @@ function updateTeamBarChart(teamOverview) {
 
 
 
+      d3.select("#team-bar-chart").selectAll('svg').remove().exit();
+  let svg = d3.select("#team-bar-chart").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
 
-    let svg = d3.select("#team-bar-chart svg");
-    let bar = svg.selectAll(".bar");
 
-    x.domain(Object.keys(teamOverview).map(function(d) {
-        return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
-    })); 
-
-    y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
-        return d['value']['contract'][yearSelected]['cap-hit']; 
-    })]);
+        x.domain(Object.keys(teamOverview).map(function(d) {
+            return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
+        })); 
+        y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+            return d['value']['contract'][yearSelected]['cap-hit']; 
+        })]);
 
 
 for (let i = 0, l = teamOverview.length; i < l; i++) {
     map[teamOverview[i].id] = teamOverview[i];
 }
+
+
 
 
 svg.selectAll(".bar")
@@ -679,4 +682,38 @@ svg.selectAll(".bar")
     .attr("height", function(d) {
       return height - y(d['value']['contract'][yearSelected]['cap-hit']);
     });  
+
+
+  // add the x Axis
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .attr("class", "bar-x-axis")
+      .call(d3.axisBottom(x))
+      .selectAll("text")
+      .attr("x", 30)
+      .attr("y", -5)
+      .attr("transform", "rotate(90)");
+
+  // add the y Axis
+  svg.append("g")
+      .attr("class", "bar-y-axis")
+      .call(d3.axisLeft(y));   
+}
+
+
+
+
+
+function switchPlayerCharts(team, playerKey) {
+  let player = team[playerKey],
+      mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0];
+
+  document.getElementsByTagName('h1')[0].innerHTML = player.name;
+
+  if(mainCapBreakdown.className.indexOf('hide') === -1){
+        mainCapBreakdown.className += ' hide';
+  }
+
+
+  showPlayerBreakdown(player);
 }
