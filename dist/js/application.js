@@ -550,7 +550,7 @@ function switchPlayerCharts(team, playerKey) {
 
   changeDom('player', player.name);
 
-  //showPlayerBreakdown(player);
+  populatePlayerBarChart(player);
   generatePlayerStats();
 }
 
@@ -613,7 +613,6 @@ function changeDom(view, name) {
 }
 
 function generatePlayerStats() {
-
   //Width and height
   var w = 700;
   var h = 500;
@@ -647,6 +646,7 @@ function generatePlayerStats() {
   var yAxis = d3.axisLeft(yScale).ticks(5); //.tickFormat(formatAsPercentage);
 
 
+  d3.select("#player-scatter-plot").selectAll('svg').remove().exit();
   //Create SVG element
   var svg = d3.select("#player-scatter-plot").append("svg").attr("width", w + padding).attr("height", h + padding);
 
@@ -676,4 +676,77 @@ function generatePlayerStats() {
   svg.append("g").attr("class", "axis").attr("transform", "translate(" + padding + ",0)").call(yAxis);
 
   svg.append("text").attr("transform", "rotate(-90)").attr("y", "-3px").attr("x", 0 - h / 2).attr("dy", "1em").style("text-anchor", "middle").text("Corsi (%)");
+}
+
+function populatePlayerBarChart(player) {
+
+  console.log(player);
+
+  var margin = { top: 20, right: 20, bottom: 80, left: 60 },
+      width = 847 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+  // set the ranges
+  var x = d3.scaleBand().range([0, width]).padding(0.1);
+
+  var y = d3.scaleLinear().range([height, 0]);
+
+  var colorRange = d3.scaleLinear();
+  colorRange.domain([0, d3.max(player.contract, function (d) {
+    console.log(d);
+    return d['nhl-salary'];
+  })]);
+
+  //   let svg = d3.select("#team-bar-chart").append("svg")
+  //             .attr("width", width + margin.left + margin.right)
+  //             .attr("height", height + margin.top + margin.bottom)
+  //             .append("g")
+  //             .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
+
+
+  //         x.domain(Object.keys(teamOverview).map(function(d) {
+  //             return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
+  //         })); 
+  //         y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
+  //             return d['value']['contract'][yearSelected]['cap-hit']; 
+  //         })]);
+
+
+  // for (let i = 0, l = teamOverview.length; i < l; i++) {
+  //     map[teamOverview[i].id] = teamOverview[i];
+  // }
+
+
+  // svg.selectAll(".bar")
+  //     .data(d3.entries(teamOverview))
+  //     .enter().append("rect") 
+  //     .attr("class", "bar")
+  //     .attr("x", function(d) {
+  //         return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]); 
+  //       })
+  //     .attr("width", x.bandwidth())
+  //     .attr("fill", function(d) {
+  //         return d3.interpolatePlasma(colorRange(d['value']['contract'][yearSelected]['cap-hit']));
+  //       })
+  //     .attr("y", function(d) {
+  //         return y(d['value']['contract'][yearSelected]['cap-hit']);
+  //       })
+  //     .attr("height", function(d) {
+  //       return height - y(d['value']['contract'][yearSelected]['cap-hit']);
+  //     });  
+
+
+  //   // add the x Axis
+  //   svg.append("g")
+  //       .attr("transform", "translate(0," + height + ")")
+  //       .attr("class", "bar-x-axis")
+  //       .call(d3.axisBottom(x))
+  //       .selectAll("text")
+  //       .attr("x", 30)
+  //       .attr("y", -5)
+  //       .attr("transform", "rotate(90)");
+
+  //   // add the y Axis
+  //   svg.append("g")
+  //       .attr("class", "bar-y-axis")
+  //       .call(d3.axisLeft(y));             
 }
