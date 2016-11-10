@@ -891,7 +891,6 @@ svg.append("text")
 
 function populatePlayerBarChart(player) {
 
-  console.log(player);
 
   let margin = {top: 20, right: 20, bottom:80, left: 60},
       width = 847 - margin.left - margin.right,
@@ -905,53 +904,52 @@ function populatePlayerBarChart(player) {
               .range([height, 0]);
 
       let colorRange = d3.scaleLinear();
-          colorRange.domain([0, d3.max(player.contract, function(d) {
-            console.log(d);
+          colorRange.domain([0, d3.max(player, function(d) {
+            console.log('color', d);
             return d['nhl-salary']; 
         })]); 
 
 
 
 
-//   let svg = d3.select("#team-bar-chart").append("svg")
-//             .attr("width", width + margin.left + margin.right)
-//             .attr("height", height + margin.top + margin.bottom)
-//             .append("g")
-//             .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
+  let svg = d3.select("#player-salary-chart").append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
 
 
-//         x.domain(Object.keys(teamOverview).map(function(d) {
-//             return teamOverview[d]['name'].split(' ')[(teamOverview[d]['name'].split(' ').length) - 1];
-//         })); 
-//         y.domain([0, d3.max(d3.entries(teamOverview), function(d) {
-//             return d['value']['contract'][yearSelected]['cap-hit']; 
-//         })]);
+        x.domain(d3.map(d3.keys(player.contract), function(d) {  
+          return d; 
+        })); 
 
-
-// for (let i = 0, l = teamOverview.length; i < l; i++) {
-//     map[teamOverview[i].id] = teamOverview[i];
-// }
+        y.domain([0, d3.max(d3.keys(player.contract), function(d) {
+            return player.contract[d]['nhl-salary']; 
+        })]);
 
 
 
-
-// svg.selectAll(".bar")
-//     .data(d3.entries(teamOverview))
-//     .enter().append("rect") 
-//     .attr("class", "bar")
-//     .attr("x", function(d) {
-//         return x(d['value']['name'].split(' ')[d['value']['name'].split(' ').length - 1]); 
-//       })
-//     .attr("width", x.bandwidth())
-//     .attr("fill", function(d) {
-//         return d3.interpolatePlasma(colorRange(d['value']['contract'][yearSelected]['cap-hit']));
-//       })
-//     .attr("y", function(d) {
-//         return y(d['value']['contract'][yearSelected]['cap-hit']);
-//       })
-//     .attr("height", function(d) {
-//       return height - y(d['value']['contract'][yearSelected]['cap-hit']);
-//     });  
+svg.selectAll(".bar")
+    .data(player)
+    .enter().append("rect") 
+    .attr("class", "bar")
+    .attr("x", function(d) {
+        console.log('x', d);
+        return x(d); 
+    })
+    .attr("width", x.bandwidth())
+    .attr("fill", function(d) {
+        console.log('fill', d);
+        return d3.interpolatePlasma(colorRange(d));
+      })
+    .attr("y", function(d) {
+        console.log('y', d);
+        return y(d);
+      })
+    .attr("height", function(d) {
+      console.log('height', d);
+      return height - y(d);
+    });  
 
 
 //   // add the x Axis
