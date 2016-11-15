@@ -751,7 +751,7 @@ function changeDom(view, name) {
           teamStandingsContainer.className += ' hide';
       }
 
-      playerSalaryChart.className = playerSalaryChart.className.replace(/\b\shide\b/, "");
+      playerSalaryChart.className = "";
       playerScatterPlot.className = playerScatterPlot.className.replace(/\b\shide\b/, "");
 
   }else{
@@ -770,7 +770,7 @@ function changeDom(view, name) {
       mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
       teamStandingsContainer.className = teamStandingsContainer.className.replace(/\b\shide\b/, "");
       teamBarChart.className = teamBarChart.className.replace(/\b\shide\b/, "");
-      teamPieChart.className = teamPieChart.className.replace(/\b\shide\b/, "");
+      teamPieChart.className = "";
   }
 
 
@@ -891,79 +891,78 @@ svg.append("text")
 
 function populatePlayerBarChart(player) {
 
+var dataset = [ ["One", 5], ["Two", 10], ["Three", 15], ["Four", 20], ["Five", 25], ["Six", 30], ["Seven", 35], ["Eight", 40], ["Nine", 45], ["Ten", 50]];
 
-  let margin = {top: 20, right: 20, bottom:80, left: 60},
-      width = 847 - margin.left - margin.right,
-      height = 500 - margin.top - margin.bottom;
-      // set the ranges
-      let x = d3.scaleBand()
-              .range([0, width])
-              .padding(0.1);
+for(var i in player.contract){
+  player.contract[i]['year'] = i;
+}
 
-      let y = d3.scaleLinear()
-              .range([height, 0]);
-
-      let colorRange = d3.scaleLinear();
-          colorRange.domain([0, d3.max(player, function(d) {
-            console.log('color', d);
-            return d['nhl-salary']; 
-        })]); 
+var contractInfo = Object.values(player.contract);
 
 
 
+ // format the data
+  dataset.forEach(function(d) {
+    d[1] = +d[1];
+  });
 
-  let svg = d3.select("#player-salary-chart").append("svg")
-            .attr("width", width + margin.left + margin.right)
-            .attr("height", height + margin.top + margin.bottom)
-            .append("g")
-            .attr("transform", "translate(" + margin.left + "," + margin.top + ")"); 
+var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 960 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+var x = d3.scaleBand()
+          .range([0, width])
+          .padding(0.1);
+var y = d3.scaleLinear()
+          .range([height, 0]);
+
+var stack = d3.stack().keys(['nhl-salary', 'signing-bonus', 'player-bonus']);
+let capHit = d3.line().x(d => { console.log(d); return x(d.year)}).y(d => { return y(d['cap-hit'])});
+
+let colorRange = d3.scaleLinear();
+    colorRange.domain([0, 10000000]);           
 
 
-        x.domain(d3.map(d3.keys(player.contract), function(d) {  
-          return d; 
-        })); 
+var svg = d3.select("#player-salary-chart").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom);
+var g = svg.append("g")
+    .attr("transform", 
+          "translate(" + margin.left + "," + margin.top + ")"); 
 
-        y.domain([0, d3.max(d3.keys(player.contract), function(d) {
-            return player.contract[d]['nhl-salary']; 
-        })]);
+  x.domain(['2016-2017', '2017-2018', '2018-2019', '2019-2020']);
+  y.domain([0, 10000000]);
 
 
 
-svg.selectAll(".bar")
-    .data(player)
-    .enter().append("rect") 
-    .attr("class", "bar")
-    .attr("x", function(d) {
-        console.log('x', d);
-        return x(d); 
-    })
-    .attr("width", x.bandwidth())
-    .attr("fill", function(d) {
-        console.log('fill', d);
-        return d3.interpolatePlasma(colorRange(d));
+  // append the rectangles for the bar chart
+  svg.selectAll(".bar")
+      .data(contractInfo)
+    .enter().append("rect")
+      .attr("class", "bar")
+      .attr("x", function(d) { return x(d.year); })
+      .attr("width", x.bandwidth())
+      .attr("fill", function(d) {
+        return d3.interpolatePlasma(colorRange(d['nhl-salary']));
       })
-    .attr("y", function(d) {
-        console.log('y', d);
-        return y(d);
-      })
-    .attr("height", function(d) {
-      console.log('height', d);
-      return height - y(d);
-    });  
+      .attr("y", function(d) { return y(d['nhl-salary']); })
+      .attr("height", function(d) { return height - y(d['nhl-salary']); });         
 
 
-//   // add the x Axis
-//   svg.append("g")
-//       .attr("transform", "translate(0," + height + ")")
-//       .attr("class", "bar-x-axis")
-//       .call(d3.axisBottom(x))
-//       .selectAll("text")
-//       .attr("x", 30)
-//       .attr("y", -5)
-//       .attr("transform", "rotate(90)");
+    svg.append("line")
+    .style("stroke", "black")
+    .attr("x1", 0)
+    .attr("y1", y(contractInfo[0]['cap-hit']))
+    .attr("x2", width)
+    .attr("y2", y(contractInfo[0]['cap-hit']));  
 
-//   // add the y Axis
-//   svg.append("g")
-//       .attr("class", "bar-y-axis")
-//       .call(d3.axisLeft(y));             
+
+  svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));                      
+
+
+   // add the y Axis
+  svg.append("g")
+      .call(d3.axisLeft(y));
 }
