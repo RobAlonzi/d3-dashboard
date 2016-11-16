@@ -3,11 +3,22 @@ let salaryCap = 74000000,
     yearSelected = '2016-2017',
     freshData;
 
+
+document.getElementById("btn-input-cap").value = salaryCap;  
+
+
+document.getElementById('btn-cap-no').onclick = (evt) =>{
+      let newCap = document.getElementById("btn-input-cap").value;
+
+      salaryCap = newCap.replace(/\D/g,'')
+      switchYear(yearSelected);
+}  
+
 //getting team data JSON
 let data = new Promise(function (resolve, reject) {
 
     let xhr = new XMLHttpRequest();
-    xhr.open('GET', '/js/data.json?t=' + Math.random());
+    xhr.open('GET', 'dist/js/data.json?t=' + Math.random());
     xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
 
     xhr.onload = function () {
@@ -51,23 +62,67 @@ data.then(v =>{
 function createPoints() {
 
   let ptsBreakdown = [];
+  let relPtsBreakdown = [];
   let outcomes = [0, 1, 2];
   let totalPoints = 0;
+  let totalWins = 0;
   let totalPointsRiv = 0;
+  let totalWinsRiv = 0;
   let totalPointsRiv2 = 0;
+  let totalWinsRiv2 = 0;
+
+  ptsBreakdown.push([0,0,0,0]);
+  relPtsBreakdown.push([0,0,0,0]);
+
   for (let i = 1; i <= 82; i++) {
-      totalPoints += outcomes[Math.floor(Math.random()*outcomes.length)];
-      totalPointsRiv += outcomes[Math.floor(Math.random()*outcomes.length)];
-      totalPointsRiv2 += outcomes[Math.floor(Math.random()*outcomes.length)];
+      let outcomeTeam = outcomes[Math.floor(Math.random()*outcomes.length)];
+      totalPoints += outcomeTeam;
+      if (outcomeTeam === 2){
+          totalWins += 1;
+      }else if(outcomeTeam === 1){
+          totalWins += 0;
+      }else{
+          totalWins -= 1;
+      }
+
+      outcomeTeam = outcomes[Math.floor(Math.random()*outcomes.length)];
+      totalPointsRiv += outcomeTeam;
+      if (outcomeTeam === 2){
+          totalWinsRiv += 1;
+      }else if(outcomeTeam === 1){
+          totalWinsRiv += 0;
+      }else{
+          totalWinsRiv -= 1;
+      }
+
+      outcomeTeam = outcomes[Math.floor(Math.random()*outcomes.length)];
+      totalPointsRiv2 += outcomeTeam;
+      if (outcomeTeam === 2){
+          totalWinsRiv2 += 1;
+      }else if(outcomeTeam === 1){
+          totalWinsRiv2 += 0;
+      }else{
+          totalWinsRiv2 -= 1;
+      }
+
+      
+      relPtsBreakdown.push([i, totalWins, totalWinsRiv, totalWinsRiv2]);
       ptsBreakdown.push([i, totalPoints, totalPointsRiv, totalPointsRiv2]);
   }
+
+  createGBLine(relPtsBreakdown);
+  createPointsLine(ptsBreakdown);
+
+}
+
+function createGBLine(ptsBreakdown) {
 
   //let d3 nest them into proper groupings
 
   // set the dimensions and margins of the graph 
-  let margin = {top: 50, right: 130, bottom: 30, left: 50}, 
+  let margin = {top: 40, right: 140, bottom: 40, left: 40}, 
       width = 847 - margin.left - margin.right, 
-      height = 500 - margin.top - margin.bottom;
+      height = 400 - margin.top - margin.bottom;
 
   let x = d3.scaleLinear().range([0, width]); 
   let y = d3.scaleLinear().range([height, 0]);
@@ -78,8 +133,8 @@ function createPoints() {
       presLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[3])});
 
 
-  let svg = d3.select("#team-standings-line").append("svg");
-      svg.attr("width", width + margin.left + margin.right)
+  let svg = d3.select("#team-relative-standings-line").append("svg")
+          .attr("width", width + margin.left + margin.right)
          .attr("height", height + margin.top + margin.bottom)
          .append("g")
          .attr("transform",
@@ -87,7 +142,7 @@ function createPoints() {
 
 
   x.domain(d3.extent(ptsBreakdown, function(d) {return d[0]; }));
-  y.domain([0, d3.max(ptsBreakdown, function(d) { return d3.max(d); })]);  
+  y.domain([d3.min(ptsBreakdown, function(d) { return (d3.min([d[1], d[2], d[3]]) - 5); }), d3.max(ptsBreakdown, function(d) { return (d3.max([d[1], d[2], d[3]]) + 5); })]);  
 
   svg.append("path")
       .data([ptsBreakdown])
@@ -109,21 +164,115 @@ function createPoints() {
 
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][1]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][1]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Our Team`; });  
+
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][2]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Division Rival #1`; });  
+      
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][3]) + ")"; })
+      .attr("dy", "0.35em")   
+      .style("font", "10px sans-serif")
+      .text(function(d) { return `Division Rival #2`; });               
+
+   svg.append("g")
+      .attr("transform", "translate(0," + height + ")")
+      .call(d3.axisBottom(x));
+
+
+   svg.append("text")             
+      .attr("transform",
+            "translate(" + (width/2) + " ," + (height + margin.top) + ")")
+      .style("text-anchor", "middle")
+      .text("Games Played");   
+
+      
+   svg.append("g")
+      .call(d3.axisLeft(y));  
+
+
+    svg.append("text")
+      .attr("transform", "rotate(-90)")
+      .attr("y", 0 - margin.left)
+      .attr("x",0 - (height / 2))
+      .attr("dy", "1em")
+      .style("text-anchor", "middle")
+      .text("Games Above .500"); 
+}
+         
+
+function createPointsLine(ptsBreakdown) {
+
+  //let d3 nest them into proper groupings
+
+  // set the dimensions and margins of the graph 
+  let margin = {top: 50, right: 130, bottom: 30, left: 50}, 
+      width = 847 - margin.left - margin.right, 
+      height = 500 - margin.top - margin.bottom;
+
+  let x = d3.scaleLinear().range([0, width]); 
+  let y = d3.scaleLinear().range([height, 0]);
+  let z = d3.scaleOrdinal(d3.schemeCategory10);
+
+  let teamLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[1])}),
+      avgLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[2])}),
+      presLine = d3.line().x(d => { return x(d[0])}).y(d => { return y(d[3])});
+
+
+  let svg = d3.select("#team-standings-line").append("svg")
+          .attr("width", width + margin.left + margin.right)
+         .attr("height", height + margin.top + margin.bottom)
+         .append("g")
+         .attr("transform",
+          "translate(" + margin.left + "," + margin.top + ")");
+
+
+  x.domain(d3.extent(ptsBreakdown, function(d) {return d[0]; }));
+  y.domain([0, d3.max(ptsBreakdown, function(d) { return (d3.max([d[1], d[2], d[3]]) + 5); })]);  
+
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line team-line")
+      .attr("d", teamLine)
+      .style("stroke", "#8e44ad");  
+
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line")
+      .attr("d", avgLine)
+      .style("stroke", "#2980b9");
+      
+  svg.append("path")
+      .data([ptsBreakdown])
+      .attr("class", "line")
+      .attr("d", presLine)
+      .style("stroke", "#d35400");     
+
+   svg.append("text")
+      .datum([ptsBreakdown][0])
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][1]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
       .text(function(d) { return `Our Team (${d[d.length - 1][1]} pts)`; });  
 
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][2]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][2]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
       .text(function(d) { return `Division Rival #1 (${d[d.length - 1][2]} pts)`; });  
       
    svg.append("text")
       .datum([ptsBreakdown][0])
-      .attr("transform", function(d) { return "translate(" + x(d[d.length - 1][0]) + "," + y(d[d.length - 1][3]) + ")"; })
+      .attr("transform", function(d) { return "translate(" + (x(d[d.length - 1][0]) + 5) + "," + y(d[d.length - 1][3]) + ")"; })
       .attr("dy", "0.35em")   
       .style("font", "10px sans-serif")
       .text(function(d) { return `Division Rival #2 (${d[d.length - 1][3]} pts)`; });               
@@ -154,8 +303,6 @@ function createPoints() {
 
 };
 
-
-
 function populateTeamBreakdown(team) {
   for(let playerKey in team){
     let player = team[playerKey],
@@ -165,7 +312,7 @@ function populateTeamBreakdown(team) {
         continue;
     
 
-    let a = document.createElement('a');
+    let a = document.createElement('span');
         a.className = 'list-group-item';
         a.href="javascript:;";
         a.setAttribute("player-key", playerKey);
@@ -186,15 +333,15 @@ function populateTeamBreakdown(team) {
     }
   }
 
-    document.getElementById('team-breakdown').onclick = (evt) =>{
-      let event = evt || window.event,
-          target = event.target || event.srcElement,
-          playerKey = target.getAttribute('player-key');
+    // document.getElementById('team-breakdown').onclick = (evt) =>{
+    //   let event = evt || window.event,
+    //       target = event.target || event.srcElement,
+    //       playerKey = target.getAttribute('player-key');
 
-          if(playerKey){
-            switchPlayerCharts(team, playerKey);
-          }
-    }
+    //       if(playerKey){
+    //         switchPlayerCharts(team, playerKey);
+    //       }
+    // }
 }
 
 
@@ -308,8 +455,6 @@ function populateTeamBarChart(teamOverview) {
         })]); 
 
 
-
-
   let svg = d3.select("#team-bar-chart").append("svg")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
@@ -328,7 +473,6 @@ function populateTeamBarChart(teamOverview) {
 for (let i = 0, l = teamOverview.length; i < l; i++) {
     map[teamOverview[i].id] = teamOverview[i];
 }
-
 
 
 
@@ -361,10 +505,20 @@ svg.selectAll(".bar")
       .attr("y", -5)
       .attr("transform", "rotate(90)");
 
+
+  let yAxis = d3.axisLeft(y)
+              .tickFormat(d3.format("$.3s"));      
+
   // add the y Axis
   svg.append("g")
       .attr("class", "bar-y-axis")
-      .call(d3.axisLeft(y));             
+      .call(yAxis);
+
+
+
+       
+   
+               
 }
 
 function createTeamPie(teamOverview) {
@@ -499,7 +653,6 @@ document.getElementById('change-year-btn').onclick = (evt) =>{
 function switchYear(year) {
   yearSelected = year;
 
-  changeDom('team');
   
   let fresherData = JSON.parse(JSON.stringify(freshData));
   //list all players on team breakdown section
@@ -540,7 +693,7 @@ function updateTeamBreakdown(team) {
         continue;
     
 
-    let a = document.createElement('a');
+    let a = document.createElement('span');
         a.className = 'list-group-item';
         a.href="javascript:;";
         a.setAttribute("player-key", playerKey);
@@ -693,276 +846,283 @@ svg.selectAll(".bar")
       .attr("y", -5)
       .attr("transform", "rotate(90)");
 
+
+  let yAxis = d3.axisLeft(y)
+              .tickFormat(d3.format("m"));    
+
+
+
+
   // add the y Axis
   svg.append("g")
       .attr("class", "bar-y-axis")
-      .call(d3.axisLeft(y));   
+      .call(yAxis);   
 }
 
 
 
 
 
-function switchPlayerCharts(team, playerKey) {
-  let player = team[playerKey];
+// function switchPlayerCharts(team, playerKey) {
+//   let player = team[playerKey];
 
-  changeDom('player', player.name);
+//   changeDom('player', player.name);
 
-  populatePlayerBarChart(player);
-  generatePlayerStats();
-}
+//   populatePlayerBarChart(player);
+//   generatePlayerStats();
+// }
 
 
 
-function changeDom(view, name) {
-  let pageTitle = document.getElementsByTagName('h1')[0],
-      mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0],
-      chartOneTitle = document.getElementById('chart-1-title'),
-      chartTwoTitle = document.getElementById('chart-2-title');
+// function changeDom(view, name) {
+//   let pageTitle = document.getElementsByTagName('h1')[0],
+//       mainCapBreakdown = document.getElementsByClassName('main-cap-breakdown')[0],
+//       chartOneTitle = document.getElementById('chart-1-title'),
+//       chartTwoTitle = document.getElementById('chart-2-title');
 
-  let teamPieChart = document.getElementById('salary-pie-chart'),
-      teamBarChart = document.getElementById('team-bar-chart'),
-      teamStandingsContainer = document.getElementById('team-standings-conatiner'); 
+//   let teamPieChart = document.getElementById('salary-pie-chart'),
+//       teamBarChart = document.getElementById('team-bar-chart'),
+//       teamStandingsContainer = document.getElementById('team-standings-conatiner'); 
 
-  //player vars
-  let playerSalaryChart = document.getElementById('player-salary-chart'),
-      playerScatterPlot = document.getElementById('player-scatter-plot');
+//   //player vars
+//   let playerSalaryChart = document.getElementById('player-salary-chart'),
+//       playerScatterPlot = document.getElementById('player-scatter-plot');
 
 
-  if (view === 'player'){
-      pageTitle.innerHTML = name;
+//   if (view === 'player'){
+//       pageTitle.innerHTML = name;
 
-      chartOneTitle.innerHTML = 'Player Salary Breakdown';
-      chartTwoTitle.innerHTML = 'Player Corsi Plot';
+//       chartOneTitle.innerHTML = 'Player Salary Breakdown';
+//       chartTwoTitle.innerHTML = 'Player Corsi Plot';
 
-      if(mainCapBreakdown.className.indexOf('hide') === -1){
-          mainCapBreakdown.className += ' hide';
-      }
+//       if(mainCapBreakdown.className.indexOf('hide') === -1){
+//           mainCapBreakdown.className += ' hide';
+//       }
 
-      if(teamPieChart.className.indexOf('hide') === -1){
-          teamPieChart.className += ' hide';
-      }
+//       if(teamPieChart.className.indexOf('hide') === -1){
+//           teamPieChart.className += ' hide';
+//       }
 
-      if(teamBarChart.className.indexOf('hide') === -1){
-          teamBarChart.className += ' hide';
-      }
+//       if(teamBarChart.className.indexOf('hide') === -1){
+//           teamBarChart.className += ' hide';
+//       }
 
-      if(teamStandingsContainer.className.indexOf('hide') === -1){
-          teamStandingsContainer.className += ' hide';
-      }
-
-      playerSalaryChart.className = "";
-      playerScatterPlot.className = playerScatterPlot.className.replace(/\b\shide\b/, "");
-
-  }else{
-      pageTitle.innerHTML = 'Team Breakdown';
-      chartOneTitle.innerHTML = 'Team Cap Pie Chart';
-      chartTwoTitle.innerHTML = 'Player Salaries Bar Chart';
+//       if(teamStandingsContainer.className.indexOf('hide') === -1){
+//           teamStandingsContainer.className += ' hide';
+//       }
+
+//       playerSalaryChart.className = "";
+//       playerScatterPlot.className = playerScatterPlot.className.replace(/\b\shide\b/, "");
+
+//   }else{
+//       pageTitle.innerHTML = 'Team Breakdown';
+//       chartOneTitle.innerHTML = 'Team Cap Pie Chart';
+//       chartTwoTitle.innerHTML = 'Player Salaries Bar Chart';
 
-      if(playerSalaryChart.className.indexOf('hide') === -1){
-          playerSalaryChart.className += ' hide';
-      }
+//       if(playerSalaryChart.className.indexOf('hide') === -1){
+//           playerSalaryChart.className += ' hide';
+//       }
 
-      if(playerScatterPlot.className.indexOf('hide') === -1){
-          playerScatterPlot.className += ' hide';
-      }
+//       if(playerScatterPlot.className.indexOf('hide') === -1){
+//           playerScatterPlot.className += ' hide';
+//       }
 
-      mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
-      teamStandingsContainer.className = teamStandingsContainer.className.replace(/\b\shide\b/, "");
-      teamBarChart.className = teamBarChart.className.replace(/\b\shide\b/, "");
-      teamPieChart.className = "";
-  }
-
-
-}
+//       mainCapBreakdown.className = mainCapBreakdown.className.replace(/\b\shide\b/, "");
+//       teamStandingsContainer.className = teamStandingsContainer.className.replace(/\b\shide\b/, "");
+//       teamBarChart.className = teamBarChart.className.replace(/\b\shide\b/, "");
+//       teamPieChart.className = "";
+//   }
+
+
+// }
 
 
-function generatePlayerStats() {
-//Width and height
-var w = 700;
-var h = 500;
-var padding = 30;
-
-//Dynamic, random dataset
-var dataset = [];
-var numDataPoints = 82;
-for (var i = 0; i < numDataPoints; i++) {
-    var corsiRating = (Math.random() * 100).toFixed(1);
-    var toi = Math.floor(Math.random() * 30) + 1;
+// function generatePlayerStats() {
+// //Width and height
+// var w = 700;
+// var h = 500;
+// var padding = 30;
+
+// //Dynamic, random dataset
+// var dataset = [];
+// var numDataPoints = 82;
+// for (var i = 0; i < numDataPoints; i++) {
+//     var corsiRating = (Math.random() * 100).toFixed(1);
+//     var toi = Math.floor(Math.random() * 30) + 1;
 
-    dataset.push([i, toi, corsiRating]);
-}
+//     dataset.push([i, toi, corsiRating]);
+// }
 
-//Create scale functions
-var xScale = d3.scaleLinear()
-                .domain([0, d3.max(dataset, function(d) { return d[1]; })])
-                .range([padding, w - padding * 2]);
+// //Create scale functions
+// var xScale = d3.scaleLinear()
+//                 .domain([0, d3.max(dataset, function(d) { return d[1]; })])
+//                 .range([padding, w - padding * 2]);
 
-var yScale = d3.scaleLinear()
-                .domain([0, d3.max(dataset, function(d) { return d[2]; })])
-                .range([h - padding, padding]);
+// var yScale = d3.scaleLinear()
+//                 .domain([0, d3.max(dataset, function(d) { return d[2]; })])
+//                 .range([h - padding, padding]);
 
-var rScale = d3.scaleLinear()
-                .domain([0, d3.max(dataset, function(d) { return d[2]; })])
-                .range([2, 5]);
+// var rScale = d3.scaleLinear()
+//                 .domain([0, d3.max(dataset, function(d) { return d[2]; })])
+//                 .range([2, 5]);
 
 
-//var formatAsPercentage = d3.format(".1%");
-var xAxis = d3.axisBottom(xScale).ticks(5);
-var yAxis = d3.axisLeft(yScale).ticks(5);//.tickFormat(formatAsPercentage);
+// //var formatAsPercentage = d3.format(".1%");
+// var xAxis = d3.axisBottom(xScale).ticks(5);
+// var yAxis = d3.axisLeft(yScale).ticks(5);//.tickFormat(formatAsPercentage);
 
 
 
 
-d3.select("#player-scatter-plot").selectAll('svg').remove().exit();
-//Create SVG element
-var svg = d3.select("#player-scatter-plot")
-         .append("svg")
-         .attr("width", w + padding)
-         .attr("height", h + padding);
+// d3.select("#player-scatter-plot").selectAll('svg').remove().exit();
+// //Create SVG element
+// var svg = d3.select("#player-scatter-plot")
+//          .append("svg")
+//          .attr("width", w + padding)
+//          .attr("height", h + padding);
 
- // Define the div for the tooltip
-var div = svg.append("div") 
-    .attr("class", "tooltip-player-scatter")       
-    .style("opacity", 0);        
+//  // Define the div for the tooltip
+// var div = svg.append("div") 
+//     .attr("class", "tooltip-player-scatter")       
+//     .style("opacity", 0);        
 
-//Create circles
-svg.selectAll("circle")
-   .data(dataset)
-   .enter()
-   .append("circle")
-   .attr("cx", function(d) {
-         return xScale(d[1]);
-   })
-   .attr("cy", function(d) {
-         return yScale(d[2]);
-   })
-   .attr("r", function(d) {
-         return rScale(d[2]);
-   }).on("mouseover", function(d) {   
-          div.transition()    
-              .duration(200)    
-              .style("opacity", .9);    
-          div.html("hi")  
-              .style("left", (d3.event.pageX) + "px")   
-              .style("top", (d3.event.pageY - 28) + "px");  
-        })          
-        .on("mouseout", function(d) {   
-            div.transition()    
-                .duration(500)    
-                .style("opacity", 0); 
-        });
+// //Create circles
+// svg.selectAll("circle")
+//    .data(dataset)
+//    .enter()
+//    .append("circle")
+//    .attr("cx", function(d) {
+//          return xScale(d[1]);
+//    })
+//    .attr("cy", function(d) {
+//          return yScale(d[2]);
+//    })
+//    .attr("r", function(d) {
+//          return rScale(d[2]);
+//    }).on("mouseover", function(d) {   
+//           div.transition()    
+//               .duration(200)    
+//               .style("opacity", .9);    
+//           div.html("hi")  
+//               .style("left", (d3.event.pageX) + "px")   
+//               .style("top", (d3.event.pageY - 28) + "px");  
+//         })          
+//         .on("mouseout", function(d) {   
+//             div.transition()    
+//                 .duration(500)    
+//                 .style("opacity", 0); 
+//         });
 
 
 
 
-//Create X axis
-svg.append("g")
-   .attr("class", "axis")
-   .attr("transform", "translate(0," + (h - padding) + ")")
-   .call(xAxis);
+// //Create X axis
+// svg.append("g")
+//    .attr("class", "axis")
+//    .attr("transform", "translate(0," + (h - padding) + ")")
+//    .call(xAxis);
 
-svg.append("text")             
-      .attr("transform",
-            "translate(" + (w/2) + " ," + (h) + ")")
-      .style("text-anchor", "middle")
-      .text("Minutes Played");     
+// svg.append("text")             
+//       .attr("transform",
+//             "translate(" + (w/2) + " ," + (h) + ")")
+//       .style("text-anchor", "middle")
+//       .text("Minutes Played");     
 
-//Create Y axis
-svg.append("g")
-   .attr("class", "axis")
-   .attr("transform", "translate(" + padding +",0)")
-   .call(yAxis);   
+// //Create Y axis
+// svg.append("g")
+//    .attr("class", "axis")
+//    .attr("transform", "translate(" + padding +",0)")
+//    .call(yAxis);   
 
 
-svg.append("text")
-      .attr("transform", "rotate(-90)")
-      .attr("y", "-3px")
-      .attr("x",0 - (h / 2))
-      .attr("dy", "1em")
-      .style("text-anchor", "middle")
-      .text("Corsi (%)");  
+// svg.append("text")
+//       .attr("transform", "rotate(-90)")
+//       .attr("y", "-3px")
+//       .attr("x",0 - (h / 2))
+//       .attr("dy", "1em")
+//       .style("text-anchor", "middle")
+//       .text("Corsi (%)");  
 
-}
+// }
 
 
 
 
 
-function populatePlayerBarChart(player) {
+// function populatePlayerBarChart(player) {
 
-var dataset = [ ["One", 5], ["Two", 10], ["Three", 15], ["Four", 20], ["Five", 25], ["Six", 30], ["Seven", 35], ["Eight", 40], ["Nine", 45], ["Ten", 50]];
+// var dataset = [ ["One", 5], ["Two", 10], ["Three", 15], ["Four", 20], ["Five", 25], ["Six", 30], ["Seven", 35], ["Eight", 40], ["Nine", 45], ["Ten", 50]];
 
-for(var i in player.contract){
-  player.contract[i]['year'] = i;
-}
+// for(var i in player.contract){
+//   player.contract[i]['year'] = i;
+// }
 
-var contractInfo = Object.values(player.contract);
+// var contractInfo = Object.values(player.contract);
 
 
 
- // format the data
-  dataset.forEach(function(d) {
-    d[1] = +d[1];
-  });
+//  // format the data
+//   dataset.forEach(function(d) {
+//     d[1] = +d[1];
+//   });
 
-var margin = {top: 20, right: 20, bottom: 30, left: 40},
-    width = 960 - margin.left - margin.right,
-    height = 500 - margin.top - margin.bottom;
+// var margin = {top: 20, right: 20, bottom: 30, left: 40},
+//     width = 960 - margin.left - margin.right,
+//     height = 500 - margin.top - margin.bottom;
 
-var x = d3.scaleBand()
-          .range([0, width])
-          .padding(0.1);
-var y = d3.scaleLinear()
-          .range([height, 0]);
+// var x = d3.scaleBand()
+//           .range([0, width])
+//           .padding(0.1);
+// var y = d3.scaleLinear()
+//           .range([height, 0]);
 
-var stack = d3.stack().keys(['nhl-salary', 'signing-bonus', 'player-bonus']);
-let capHit = d3.line().x(d => { console.log(d); return x(d.year)}).y(d => { return y(d['cap-hit'])});
+// var stack = d3.stack().keys(['nhl-salary', 'signing-bonus', 'player-bonus']);
+// let capHit = d3.line().x(d => { console.log(d); return x(d.year)}).y(d => { return y(d['cap-hit'])});
 
-let colorRange = d3.scaleLinear();
-    colorRange.domain([0, 10000000]);           
+// let colorRange = d3.scaleLinear();
+//     colorRange.domain([0, 10000000]);           
 
 
-var svg = d3.select("#player-salary-chart").append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom);
-var g = svg.append("g")
-    .attr("transform", 
-          "translate(" + margin.left + "," + margin.top + ")"); 
+// var svg = d3.select("#player-salary-chart").append("svg")
+//     .attr("width", width + margin.left + margin.right)
+//     .attr("height", height + margin.top + margin.bottom);
+// var g = svg.append("g")
+//     .attr("transform", 
+//           "translate(" + margin.left + "," + margin.top + ")"); 
 
-  x.domain(['2016-2017', '2017-2018', '2018-2019', '2019-2020']);
-  y.domain([0, 10000000]);
+//   x.domain(['2016-2017', '2017-2018', '2018-2019', '2019-2020']);
+//   y.domain([0, 10000000]);
 
 
 
-  // append the rectangles for the bar chart
-  svg.selectAll(".bar")
-      .data(contractInfo)
-    .enter().append("rect")
-      .attr("class", "bar")
-      .attr("x", function(d) { return x(d.year); })
-      .attr("width", x.bandwidth())
-      .attr("fill", function(d) {
-        return d3.interpolatePlasma(colorRange(d['nhl-salary']));
-      })
-      .attr("y", function(d) { return y(d['nhl-salary']); })
-      .attr("height", function(d) { return height - y(d['nhl-salary']); });         
+//   // append the rectangles for the bar chart
+//   svg.selectAll(".bar")
+//       .data(contractInfo)
+//     .enter().append("rect")
+//       .attr("class", "bar")
+//       .attr("x", function(d) { return x(d.year); })
+//       .attr("width", x.bandwidth())
+//       .attr("fill", function(d) {
+//         return d3.interpolatePlasma(colorRange(d['nhl-salary']));
+//       })
+//       .attr("y", function(d) { return y(d['nhl-salary']); })
+//       .attr("height", function(d) { return height - y(d['nhl-salary']); });         
 
 
-    svg.append("line")
-    .style("stroke", "black")
-    .attr("x1", 0)
-    .attr("y1", y(contractInfo[0]['cap-hit']))
-    .attr("x2", width)
-    .attr("y2", y(contractInfo[0]['cap-hit']));  
+//     svg.append("line")
+//     .style("stroke", "black")
+//     .attr("x1", 0)
+//     .attr("y1", y(contractInfo[0]['cap-hit']))
+//     .attr("x2", width)
+//     .attr("y2", y(contractInfo[0]['cap-hit']));  
 
 
-  svg.append("g")
-      .attr("transform", "translate(0," + height + ")")
-      .call(d3.axisBottom(x));                      
+//   svg.append("g")
+//       .attr("transform", "translate(0," + height + ")")
+//       .call(d3.axisBottom(x));                      
 
 
-   // add the y Axis
-  svg.append("g")
-      .call(d3.axisLeft(y));
-}
+//    // add the y Axis
+//   svg.append("g")
+//       .call(d3.axisLeft(y));
+// }

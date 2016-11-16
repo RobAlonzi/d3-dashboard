@@ -9,14 +9,14 @@
     <meta name="description" content="">
     <meta name="author" content="">
 
-    <title>D3JS Examples</title>
+    <title>D3JS Team Breakdown</title>
 
     <!-- Bootstrap Core CSS -->
     <link href="vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="dist/css/application.css" rel="stylesheet">
     <!-- Custom Fonts -->
     <link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <!-- Custom CSS -->
+    <link href="dist/css/application.css" rel="stylesheet">
 
 
 </head>
@@ -27,9 +27,9 @@
         <div id="page-wrapper" style="margin:0;">
             <div class="row">
                 <div class="col-lg-12">
-                    <h1 class="page-header">D3JS Examples</h1>
+                    <h1 class="page-header">D3JS Team Breakdown</h1>
 
-                    <div style="position: absolute; top:30px; right: 15px;">
+                    <div style="position: absolute; top:15px; right: 15px;">
                         <div class="btn-group">
                             <button style="font-size:18px;" type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown">
                                 Change Year
@@ -42,6 +42,16 @@
                                 <li><a data-year-toggle="2019-2020" href="#">2019-2020</a></li>
                             </ul>
                         </div>
+                    </div>
+                    <div style="position: absolute; top:55px; right: 15px; width: 200px;">
+                        <div class="input-group">
+                        <input id="btn-input-cap" class="form-control input-sm" type="text">
+                        <span class="input-group-btn">
+                            <button class="btn btn-warning btn-sm" id="btn-cap-no">
+                                Edit Cap #
+                            </button>
+                        </span>
+                    </div>
                     </div>
                 </div>
                 <!-- /.col-lg-12 -->
@@ -119,6 +129,18 @@
                             <div class="row">
                                 <div class="col-lg-4" id="team-bar-chart"></div>
                                 <div class="col-lg-4" id="player-scatter-plot"></div>
+                            </div>
+                            <!-- /.row -->
+                        </div>
+                        <!-- /.panel-body -->
+                    </div>
+
+                    <div class="panel panel-default" id="team-relative-standings-conatiner">
+                        <div class="panel-heading"><i class="fa fa-line-chart  fa-fw"></i> Team Relative Standings Chart</div>
+                        <!-- /.panel-heading -->
+                        <div class="panel-body">
+                            <div class="row">
+                                <div class="col-lg-4" id="team-relative-standings-line"></div>
                             </div>
                             <!-- /.row -->
                         </div>
